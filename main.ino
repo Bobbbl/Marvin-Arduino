@@ -1,15 +1,13 @@
 #include <Arduino.h>
+#include "Pin_Defines.h"
+#include "Marvin_Motor.h"
 
-#define PWM1
-#define PWM2
-#define DIR1
-#define DIR2
-
+Marvin_Steppers stepper_motors(PWM1, PWM2, DIR1, DIR2);
 
 void setup(){
-
+    Serial.begin(115200);
 }
 
 void loop(){
-
+    Serial.println("Test");
 }
