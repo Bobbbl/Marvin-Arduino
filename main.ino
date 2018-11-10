@@ -18,5 +18,11 @@ void setup(){
 }
 
 void loop(){
-    Serial.println("Test");
+    // Check Connection to PC and if Interface Program
+    // is started
+    uint8_t connection_check = checkConnection();
+    // Wait until Connection is confirmed
+    while(connection_check != 1);
+
+    // Wait for Messages
 }
