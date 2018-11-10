@@ -3,10 +3,14 @@
 
 
 void Marvin_Steppers::stepMotorX(){
+  if(endschalter_flag_x == 0){
   digitalWrite(this->pwm_x, !digitalRead(this->pwm_x));
+  }
 }
 void Marvin_Steppers::stepMotorY(){
+  if(endschalter_flag_y == 0){
   digitalWrite(this->pwm_y, !digitalRead(this->pwm_y));
+  }
 }
 
 

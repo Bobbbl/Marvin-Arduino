@@ -3,6 +3,8 @@
 
 #include <Arduino.h>
 
+extern uint8_t endschalter_flag_x;
+extern uint8_t endschalter_flag_y;
 
 class Marvin_Steppers{
 
