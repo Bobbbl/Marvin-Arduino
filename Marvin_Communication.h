@@ -8,11 +8,12 @@
 
 using namespace std;
 
-enum {Start_Session, 
-    End_Session,
-    Start_Homing,
-    Send_Toolpath
-    };
+typedef enum {Start_Session = 0, 
+End_Session = 1,
+Start_Homing = 2,
+Send_Toolpath = 3,
+No_Message = -1
+}communication_alphabet;
 
 String comm_dict[20]= {
     "__Start_Session__",
@@ -22,6 +23,7 @@ String comm_dict[20]= {
 };
 
 uint8_t checkConnection();
-uint8_t waitForValidMessage(char* sentMessage);
-
+communication_alphabet checkForValidMessage();
+communication_alphabet waitForSession();
+communication_alphabet waitForKonsekutiveMessage();
 #endif

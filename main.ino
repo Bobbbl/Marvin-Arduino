@@ -18,11 +18,41 @@ void setup(){
 }
 
 void loop(){
+    // Enter Starting State 
     // Check Connection to PC and if Interface Program
     // is started
     uint8_t connection_check = checkConnection();
     // Wait until Connection is confirmed
     while(connection_check != 1);
+    
+    // Enter Working State
+    while(true){
+      // Wait for Messages
+      communication_alphabet message;
+      message = waitForSession();
 
-    // Wait for Messages
+     // Übertragung gestartet 
+     if(message == Start_Session){
+       message = waitForKonsekutiveMessage(); 
+
+       
+       switch (message)
+       {
+         case End_Session:
+           /* code */
+           break;
+
+         case Send_Toolpath:
+           /* code */
+           break;
+           
+         case Start_Homing:
+           /* code */
+           break;
+           
+         default:
+           break;
+       }
+     }     
+  }
 }
