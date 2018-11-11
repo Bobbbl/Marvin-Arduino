@@ -29,6 +29,8 @@ communication_alphabet waitForSession(){
     while(message == -1){
         communication_alphabet message;
         message = checkForValidMessage();
+        // Send NACK
+        Serial.write(comm_dict[Empfang_Bestaetigt]);
     }
 }
 
@@ -38,13 +40,27 @@ communication_alphabet waitForKonsekutiveMessage(){
     unsigned long first = millis(); // Saves Time of First Entering Function for Timeout Function
     unsigned long now = millis();   // Variable for This Loop Time
     // Enter Waiting Loop
-    while(message == -1){
+    while (message == -1)
+    {
         now = millis();
         communication_alphabet message;
         message = checkForValidMessage();
         // Check For Timeout
-        if((now - first) >= 1000){
-            break;
+        if ((now - first) >= 1000)
+        {
+            return No_Message;
         }
     }
+
+    // Send NACK
+    Serial.write(comm_dict[Empfang_Bestaetigt]);
+    return message;
+}
+
+void doHoming(){
+    // Verfahre X Motor bis es auf Endschalter trifft
+    // Fahre eine Umdrehung von Endschalter weg
+    // Verfahre Y Motor bis er auf Endschalter trifft
+    // Fahre eine Umdrehung von Endschalter weg
+
 }
