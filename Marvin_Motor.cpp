@@ -1,14 +1,49 @@
 #include "Marvin_Motor.h"
 
+void Marvin_Steppers::doHoming()
+{
+  // Set Speed to pretty Slow
+  // 60 RPMs = 1 RPS = 200 Steps per Second
+  this->setSpeed_x(60);
+  this->setSpeed_y(60);
 
+  checkLimitSwitches();
+  // Homing X
+  // Drive in X Direction until I hit Limit Switch
+  while (endschalter_flag_x != 1)
+  {
+    checkLimitSwitches();
+    this->step(-10, 0);
+  }
+  // After hitting Limit Switch, drive Back 10 Steps
+  this->step(10, 0);
+
+  checkLimitSwitches();
+  // Homing Y
+  // Drive in Y Direction until I hit Limit Switch
+  while (endschalter_flag_y != 1)
+  {
+    checkLimitSwitches();
+    this->step(0, -10);
+  }
+  // After hitting Limit Switch, drive Back 10 Steps
+  this->step(0, 10);
+}
+
+
+void Marvin_Steppers::checkLimitSwitches()
+{
+  endschalter_flag_x = digitalRead(END1);
+  endschalter_flag_y = digitalRead(END2);
+
+}
 
 void Marvin_Steppers::stepMotorX(Richtung r){
-
+  // check limit switches
+  checkLimitSwitches();
   // Check if end switch is toggled
-  int val = digitalRead(END1);
-  if (val == HIGH)
+  if (endschalter_flag_x == HIGH)
   {
-    this->x_flag = true;
     return;
   }
 
@@ -25,20 +60,17 @@ void Marvin_Steppers::stepMotorX(Richtung r){
   {
     digitalWrite(this->pwm_x, !digitalRead(this->pwm_x));
   }
-
-
 }
 
 
 
 
 void Marvin_Steppers::stepMotorY(Richtung r){
-
+  // Check limit switches
+  checkLimitSwitches();
   // Check if end switch is toggled
-  int val = digitalRead(END2);
-  if (val == HIGH)
+  if (endschalter_flag_y == HIGH)
   {
-    this->y_flag = true;
     return;
   }
 
@@ -70,18 +102,28 @@ void Marvin_Steppers::setSpeed_y(long whatSpeed){
 
 void Marvin_Steppers::step(int steps_to_move_x, int steps_to_move_y)
 {
-  int steps_left_x = abs(steps_to_move_x);  // how many steps to take
-  
-  int steps_left_y = abs(steps_to_move_y);  // how many steps to take
+  int steps_left_x = abs(steps_to_move_x); // how many steps to take
+
+  int steps_left_y = abs(steps_to_move_y); // how many steps to take
 
   // determine direction based on whether steps_to_mode is + or -:
-  if (steps_to_move_x > 0) { this->direction_x = 1; }
-  if (steps_to_move_x < 0) { this->direction_x = 0; }
-  
+  if (steps_to_move_x > 0)
+  {
+    this->direction_x = 1;
+  }
+  if (steps_to_move_x < 0)
+  {
+    this->direction_x = 0;
+  }
 
-  if (steps_to_move_y > 0) { this->direction_y = 1; }
-  if (steps_to_move_y < 0) { this->direction_y = 0; }
-
+  if (steps_to_move_y > 0)
+  {
+    this->direction_y = 1;
+  }
+  if (steps_to_move_y < 0)
+  {
+    this->direction_y = 0;
+  }
 
   // decrement the number of steps, moving one step each time:
   while (steps_left_x > 0 || steps_left_y > 0)
@@ -97,13 +139,15 @@ void Marvin_Steppers::step(int steps_to_move_x, int steps_to_move_y)
       if (this->direction_x == 1)
       {
         this->step_number_x++;
-        if (this->step_number_x == this->number_of_steps_x) {
+        if (this->step_number_x == this->number_of_steps_x)
+        {
           this->step_number_x = 0;
         }
       }
       else
       {
-        if (this->step_number_x == 0) {
+        if (this->step_number_x == 0)
+        {
           this->step_number_x = this->number_of_steps_x;
         }
         this->step_number_x--;
@@ -111,7 +155,6 @@ void Marvin_Steppers::step(int steps_to_move_x, int steps_to_move_y)
       // decrement the steps left:
       steps_left_x--;
     }
-
 
     if (now - this->last_step_time_y >= this->step_delay_y)
     {
@@ -122,13 +165,15 @@ void Marvin_Steppers::step(int steps_to_move_x, int steps_to_move_y)
       if (this->direction_y == 1)
       {
         this->step_number_y++;
-        if (this->step_number_y == this->number_of_steps_y) {
+        if (this->step_number_y == this->number_of_steps_y)
+        {
           this->step_number_y = 0;
         }
       }
       else
       {
-        if (this->step_number_y == 0) {
+        if (this->step_number_y == 0)
+        {
           this->step_number_y = this->number_of_steps_y;
         }
         this->step_number_y--;
@@ -137,5 +182,4 @@ void Marvin_Steppers::step(int steps_to_move_x, int steps_to_move_y)
       steps_left_y--;
     }
   }
-
 }

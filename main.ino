@@ -3,6 +3,10 @@
 #include "Marvin_Motor.h"
 #include "Marvin_Communication.h"
 
+extern uint8_t endschalter_flag_x;
+extern uint8_t endschalter_flag_y;
+
+
 uint8_t endschalter_flag_x = 0, endschalter_flag_y = 0;
 
 Marvin_Steppers stepper_motors(PWM1, PWM2, DIR1, DIR2);
@@ -25,8 +29,9 @@ void loop(){
   uint8_t connection_check = checkConnection();
   // Wait until Connection is confirmed
   while (connection_check != 1)
-    ;
-
+  {
+    connection_check = checkConnection();
+  }
   // Enter Working State
   while (true)
   {
@@ -50,7 +55,10 @@ void loop(){
         break;
 
       case Start_Homing:
+        // Do Homing
         doHoming();
+        // Homing done
+        Serial.write(comm_dict[End_Session]);
         break;
 
       default:
