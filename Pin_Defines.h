@@ -8,6 +8,8 @@
 #define DIR2 12
 #define END1 9
 #define END2 10
+#define RENC_A 2
+#define RENC_B 3
 
 
 #endif
