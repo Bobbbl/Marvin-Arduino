@@ -6,8 +6,8 @@
 #define PWM2 6
 #define DIR1 13
 #define DIR2 12
-#define END1 2
-#define END2 3
+#define END1 9
+#define END2 10
 
 
 #endif

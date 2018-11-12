@@ -43,7 +43,7 @@ void loop(){
     if (message == Start_Session)
     {
       message = waitForKonsekutiveMessage();
-
+ 
       switch (message)
       {
       case End_Session:
@@ -58,7 +58,7 @@ void loop(){
         // Do Homing
         doHoming();
         // Homing done
-        Serial.write(comm_dict[End_Session]);
+        Serial.println(comm_dict[End_Session]);
         break;
 
       default:

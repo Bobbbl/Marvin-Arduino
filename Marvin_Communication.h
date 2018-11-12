@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include <string.h>
+#include "Pin_Defines.h"
 
 #define dict_length 20
 

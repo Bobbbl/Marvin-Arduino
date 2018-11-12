@@ -30,7 +30,7 @@ communication_alphabet waitForSession(){
         communication_alphabet message;
         message = checkForValidMessage();
         // Send NACK
-        Serial.write(comm_dict[Empfang_Bestaetigt]);
+        Serial.println(comm_dict[Empfang_Bestaetigt]);
     }
 }
 
@@ -53,7 +53,7 @@ communication_alphabet waitForKonsekutiveMessage(){
     }
 
     // Send NACK
-    Serial.write(comm_dict[Empfang_Bestaetigt]);
+    Serial.println(comm_dict[Empfang_Bestaetigt]);
     return message;
 }
 
