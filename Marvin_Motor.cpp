@@ -2,14 +2,58 @@
 
 
 
-void Marvin_Steppers::stepMotorX(){
-  if(endschalter_flag_x == 0){
-  digitalWrite(this->pwm_x, !digitalRead(this->pwm_x));
+void Marvin_Steppers::stepMotorX(Richtung r){
+
+  // Check if end switch is toggled
+  int val = digitalRead(END1);
+  if (val == HIGH)
+  {
+    this->x_flag = true;
+    return;
   }
+
+  if (r == links)
+  {
+    digitalWrite(DIR1, HIGH);
+  }
+  else
+  {
+    digitalWrite(DIR1, LOW);
+  }
+
+  if (endschalter_flag_x == 0)
+  {
+    digitalWrite(this->pwm_x, !digitalRead(this->pwm_x));
+  }
+
+
 }
-void Marvin_Steppers::stepMotorY(){
-  if(endschalter_flag_y == 0){
-  digitalWrite(this->pwm_y, !digitalRead(this->pwm_y));
+
+
+
+
+void Marvin_Steppers::stepMotorY(Richtung r){
+
+  // Check if end switch is toggled
+  int val = digitalRead(END2);
+  if (val == HIGH)
+  {
+    this->y_flag = true;
+    return;
+  }
+
+  if (r == links)
+  {
+    digitalWrite(DIR2, HIGH);
+  }
+  else
+  {
+    digitalWrite(DIR2, LOW);
+  }
+
+  if (endschalter_flag_y == 0)
+  {
+    digitalWrite(this->pwm_y, !digitalRead(this->pwm_y));
   }
 }
 

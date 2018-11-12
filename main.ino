@@ -7,14 +7,6 @@ uint8_t endschalter_flag_x = 0, endschalter_flag_y = 0;
 
 Marvin_Steppers stepper_motors(PWM1, PWM2, DIR1, DIR2);
 
-void endschalter1(){
-
-}
-
-void endschalter2(){
-
-}
-
 
 void setup(){
   Serial.begin(115200);
@@ -24,9 +16,6 @@ void setup(){
   pinMode(DIR2, OUTPUT);
   pinMode(END1, INPUT);
   pinMode(END2, INPUT);
-
-  attachInterrupt(digitalPinToInterrupt(END1), endschalter1, RISING);
-  attachInterrupt(digitalPinToInterrupt(END2), endschalter2, RISING);
 }
 
 void loop(){

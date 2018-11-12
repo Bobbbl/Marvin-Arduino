@@ -6,6 +6,12 @@
 extern uint8_t endschalter_flag_x;
 extern uint8_t endschalter_flag_y;
 
+typedef enum {
+    links = 0,
+    rechts = 1
+} Richtung;
+
+
 class Marvin_Steppers{
 
     public:
@@ -18,8 +24,10 @@ class Marvin_Steppers{
         void setSpeed_x(long whatSpeed);
         void setSpeed_y(long whatSpeed);
         void step(int steps_to_move_x, int steps_to_move_y);
-        void stepMotorX();
-        void stepMotorY();
+        void stepMotorX(Richtung r);
+        void stepMotorY(Richtung r);
+
+        uint8_t x_flag, y_flag;
 
         int version();
 
