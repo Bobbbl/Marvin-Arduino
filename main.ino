@@ -2,10 +2,13 @@
 #include "Pin_Defines.h"
 #include "Marvin_Motor.h"
 #include "Marvin_Communication.h"
+#include <SPI.h>
+#include <SD.h>
 
 extern uint8_t endschalter_flag_x;
 extern uint8_t endschalter_flag_y;
 
+const int chipSelect = CS;
 
 uint8_t endschalter_flag_x = 0, endschalter_flag_y = 0;
 
@@ -14,6 +17,7 @@ Marvin_Steppers stepper_motors(PWM1, PWM2, DIR1, DIR2);
 
 void setup(){
   Serial.begin(115200);
+  while(!Serial); // Wait for Serial to connect
   pinMode(PWM1, OUTPUT);
   pinMode(PWM2, OUTPUT);
   pinMode(DIR1, OUTPUT);
@@ -51,14 +55,15 @@ void loop(){
         break;
 
       case Send_Toolpath:
-        /* code */
+        readToolpathTilEnd();
+        sendEndSession();
         break;
 
       case Start_Homing:
         // Do Homing
-        doHoming();
+        stepper_motors.doHoming();
         // Homing done
-        Serial.println(comm_dict[End_Session]);
+        sendEndSession();
         break;
 
       default:

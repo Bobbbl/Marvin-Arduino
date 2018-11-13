@@ -10,7 +10,7 @@ void Marvin_Steppers::doHoming()
   checkLimitSwitches();
   // Homing X
   // Drive in X Direction until I hit Limit Switch
-  while (endschalter_flag_x != 1)
+  while (endschalter_flag_x != 0)
   {
     checkLimitSwitches();
     this->step(-10, 0);
@@ -21,7 +21,7 @@ void Marvin_Steppers::doHoming()
   checkLimitSwitches();
   // Homing Y
   // Drive in Y Direction until I hit Limit Switch
-  while (endschalter_flag_y != 1)
+  while (endschalter_flag_y != 0)
   {
     checkLimitSwitches();
     this->step(0, -10);
@@ -42,7 +42,7 @@ void Marvin_Steppers::stepMotorX(Richtung r){
   // check limit switches
   checkLimitSwitches();
   // Check if end switch is toggled
-  if (endschalter_flag_x == HIGH)
+  if (endschalter_flag_x == 0)
   {
     return;
   }
@@ -56,7 +56,7 @@ void Marvin_Steppers::stepMotorX(Richtung r){
     digitalWrite(DIR1, LOW);
   }
 
-  if (endschalter_flag_x == 0)
+  if (endschalter_flag_x == 1)
   {
     digitalWrite(this->pwm_x, !digitalRead(this->pwm_x));
   }
@@ -69,7 +69,7 @@ void Marvin_Steppers::stepMotorY(Richtung r){
   // Check limit switches
   checkLimitSwitches();
   // Check if end switch is toggled
-  if (endschalter_flag_y == HIGH)
+  if (endschalter_flag_y == 0)
   {
     return;
   }
@@ -83,7 +83,7 @@ void Marvin_Steppers::stepMotorY(Richtung r){
     digitalWrite(DIR2, LOW);
   }
 
-  if (endschalter_flag_y == 0)
+  if (endschalter_flag_y == 1)
   {
     digitalWrite(this->pwm_y, !digitalRead(this->pwm_y));
   }
