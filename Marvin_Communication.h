@@ -38,8 +38,8 @@ uint8_t checkConnection();
 communication_alphabet checkForValidMessage();
 communication_alphabet waitForSession();
 communication_alphabet waitForKonsekutiveMessage();
-void readToolpathTilEnd();
 Strecke readToolPathLine();
+Strecke receaveKoordinate();
 
 // Communication shortcuts
 void sendNACK();

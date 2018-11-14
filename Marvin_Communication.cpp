@@ -162,7 +162,7 @@ Strecke readToolPathLine()
 // Returns -1 for line error
 //          0 for no error and no end_session
 //          1 for end message
-void readToolpathTilEnd(){
+Strecke receaveKoordinate(){
     Strecke s;
     unsigned long now = millis();
     do
@@ -170,20 +170,14 @@ void readToolpathTilEnd(){
         if (Serial.available() != 0)
         {
             s = readToolPathLine();
-            if (s.error == 1)
+            if (s.end_session == 0 && s.error == 0)
             {
-                return -1;
+                return s;
             }
-
-            else if (s.end_session == 1 && s.error == 0)
+            else if(s.end_session == 0)
             {
-                return 1;
-            }
-            else if (s.end_session == 0 && s.error == 0)
-            {
-                //TODO: SD CARD Write einfuegen
-                //TODO: Send Line Save abgeschlossen
-                return 0;
+               sendEndSession();
+               return s; 
             }
         }
     } while (millis() - now < MESSAGE_TIMEOUT);
