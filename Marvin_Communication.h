@@ -44,6 +44,7 @@ communication_alphabet waitForSession();
 communication_alphabet waitForKonsekutiveMessage();
 Strecke readToolPathLine();
 Strecke receiveKoordinate();
+Strecke receivePoint();
 
 // Communication shortcuts
 inline void sendNACK();
