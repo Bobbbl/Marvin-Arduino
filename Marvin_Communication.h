@@ -15,6 +15,8 @@ End_Session = 1,
 Start_Homing = 2,
 Send_Toolpath = 3,
 Empfang_Bestaetigt = 4,
+Receive_Error = 5,
+Receive_Successfull = 6,
 No_Message = -1
 }communication_alphabet;
 
@@ -23,7 +25,9 @@ String comm_dict[20]= {
     "__End_Session__",
     "__Start_Homing__",
     "__Send_Toolpath__",
-    "__Empfang_Besteatigt__"
+    "__Empfang_Besteatigt__",
+    "__Receive_Error__",
+    "__Receive_Successfull__"
 };
 
 typedef struct {
@@ -39,9 +43,11 @@ communication_alphabet checkForValidMessage();
 communication_alphabet waitForSession();
 communication_alphabet waitForKonsekutiveMessage();
 Strecke readToolPathLine();
-Strecke receaveKoordinate();
+Strecke receiveKoordinate();
 
 // Communication shortcuts
-void sendNACK();
-void sendEndSession();
+inline void sendNACK();
+inline void sendEndSession();
+inline void sendError();
+inline void sendReceiveSuccessfull();
 #endif

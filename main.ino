@@ -31,6 +31,7 @@ void loop(){
   // Check Connection to PC and if Interface Program
   // is started
   uint8_t connection_check = checkConnection();
+  Strecke s1,s2,s3;
   // Wait until Connection is confirmed
   while (connection_check != 1)
   {
@@ -55,8 +56,22 @@ void loop(){
         break;
 
       case Send_Toolpath:
-        readToolpathTilEnd();
-        sendEndSession();
+        // Wait for Message
+        while(1){
+          // Receive new Point - Function handles all Communication
+          s = receivePoint();
+          // drive Motor
+          if (s.error == 0 && s.end_session == 0)
+          {
+            stepper_motors.stepPWM();
+          }
+          // In other case leave while loop
+          else
+          {
+            break;
+          }
+        }
+
         break;
 
       case Start_Homing:
@@ -67,6 +82,7 @@ void loop(){
         break;
 
       default:
+        sendEndSession();
         break;
       }
     }

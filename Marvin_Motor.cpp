@@ -99,6 +99,9 @@ void Marvin_Steppers::setSpeed_y(long whatSpeed){
     this->step_delay_y = 60L * 1000L * 1000L / this->number_of_steps_y / whatSpeed;
 }
 
+Marvin_Steppers::stepPWM(int steps_to_move_x, int steps_to_move_y){
+
+}
 
 void Marvin_Steppers::step(int steps_to_move_x, int steps_to_move_y)
 {

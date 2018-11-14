@@ -76,12 +76,12 @@ communication_alphabet waitForKonsekutiveMessage(){
 }
 
 
-void sendNack(){
+inline void sendNack(){
     Serial.print(comm_dict[Empfang_Bestaetigt]);
 }
 
 
-void sendEndSession()
+inline void sendEndSession()
 {
     Serial.print(comm_dict[End_Session]);
 }
@@ -162,7 +162,7 @@ Strecke readToolPathLine()
 // Returns -1 for line error
 //          0 for no error and no end_session
 //          1 for end message
-Strecke receaveKoordinate(){
+Strecke receiveKoordinate(){
     Strecke s;
     unsigned long now = millis();
     do
@@ -176,9 +176,36 @@ Strecke receaveKoordinate(){
             }
             else if(s.end_session == 0)
             {
-               sendEndSession();
                return s; 
             }
         }
     } while (millis() - now < MESSAGE_TIMEOUT);
+}
+
+Strecke receivePoint(){
+    Strecke s = receiveKoordinate();
+    // If Error occured, send Error and send End session
+    if (s.error == 1)
+    {
+        sendError();
+        sendEndSession();
+    }
+    else if (s.end_session == 1)
+    {
+        sendEndSession();
+    }
+    else if (s.end_session == 0 && s.error == 0)
+    {
+        // Inform Client that everything went as expected
+        sendReceiveSuccessfull();
+    }
+}
+
+
+inline void sendError(){
+    Serial.print(comm_dict[Receive_Error]);
+}
+
+inline void sendReceiveSuccessfull(){
+    Serial.print(comm_dict[Receive_Successfull]);
 }

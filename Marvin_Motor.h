@@ -21,6 +21,7 @@ class Marvin_Steppers{
                                                                                                       dir_x(DIR_x),
                                                                                                       dir_y(DIR_y) {}
 
+    void stepPWM(int steps_to_move_x, int steps_to_move_y);
     void setSpeed_x(long whatSpeed);
     void setSpeed_y(long whatSpeed);
     void step(int steps_to_move_x, int steps_to_move_y);
