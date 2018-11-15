@@ -7,6 +7,7 @@
 
 extern uint8_t endschalter_flag_x;
 extern uint8_t endschalter_flag_y;
+extern volatile steps_x, steps_y;
 
 const int chipSelect = CS;
 
@@ -14,6 +15,22 @@ uint8_t endschalter_flag_x = 0, endschalter_flag_y = 0;
 
 Marvin_Steppers stepper_motors(PWM1, PWM2, DIR1, DIR2);
 
+// This is Motor X
+ISR(TIMER3_COMPA_vect)
+{
+  static uint8_t s_check = 1;
+  if(s_check++ == 1)
+  {
+    
+  }
+  
+}
+
+// This is Motor Y
+ISR(TIMER4_COMPA_vect)
+{
+  //
+}
 
 void setup(){
   Serial.begin(115200);
@@ -24,6 +41,8 @@ void setup(){
   pinMode(DIR2, OUTPUT);
   pinMode(END1, INPUT);
   pinMode(END2, INPUT);
+
+
 }
 
 void loop(){

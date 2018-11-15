@@ -99,8 +99,24 @@ void Marvin_Steppers::setSpeed_y(long whatSpeed){
     this->step_delay_y = 60L * 1000L * 1000L / this->number_of_steps_y / whatSpeed;
 }
 
-void Marvin_Steppers::stepPWM(int steps_to_move_x, int steps_to_move_y, int speed_x, int speed_y){
-
+void Marvin_Steppers::stepPWM(int steps_to_move_x, int steps_to_move_y, float speed_x, float speed_y){
+  // Set speed X
+  // Formel: MAXCOUNT - Compare Match Time*CPUFRQ/Prescaler
+  float spm = speed_x * this->number_of_steps_x;
+  float ips = 2 * spm;
+  float cmt = 1 / ips;
+  float count = 65536 - cmt * 16000000L / this->prescaler;
+  uint16_t round_count = (uint16_t)round(count);
+  OCR3A = round_count;
+  // Set speed Y
+  spm = speed_y * this->number_of_steps_y;
+  ips = 2 * spm;
+  cmt = 1 / ips;
+  count = 65536 - cmt * 16000000L / this->prescaler;
+  OCR2A = round_count;
+  // Set Steps
+  steps_x = steps_to_move_x;
+  steps_y = steps_to_move_y;
 }
 
 void Marvin_Steppers::step(int steps_to_move_x, int steps_to_move_y)
