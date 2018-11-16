@@ -7,7 +7,7 @@
 
 extern uint8_t endschalter_flag_x;
 extern uint8_t endschalter_flag_y;
-extern volatile steps_x, steps_y;
+extern volatile uint16_t steps_x, steps_y;
 
 const int chipSelect = CS;
 
@@ -19,9 +19,15 @@ Marvin_Steppers stepper_motors(PWM1, PWM2, DIR1, DIR2);
 ISR(TIMER3_COMPA_vect)
 {
   static uint8_t s_check = 1;
-  if(s_check++ == 1)
+  if(s_check++ == 2)
   {
-    
+    steps_x--;
+  }
+
+  if(steps_x<=0)
+  {
+    // Stop Timer
+    stepper_motors.stopTimer3();
   }
   
 }
@@ -29,7 +35,17 @@ ISR(TIMER3_COMPA_vect)
 // This is Motor Y
 ISR(TIMER4_COMPA_vect)
 {
-  //
+  static uint8_t s_check = 1;
+  if(s_check++ == 2)
+  {
+    steps_y--;
+  }
+
+  if(steps_y <=0)
+  {
+    // Stop Timer
+    stepper_motors.stopTimer4();
+  }
 }
 
 void setup(){
@@ -82,6 +98,8 @@ void loop(){
           // drive Motor
           if (s.error == 0 && s.end_session == 0)
           {
+            // TODO: ADD CONVERT TO STEPS HERE
+            s = convertToStepsAndRPM(s);
             stepper_motors.stepPWM(1,1,1,1);
           }
           // In other case leave while loop

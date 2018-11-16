@@ -4,16 +4,23 @@
 #include <Arduino.h>
 #include "Pin_Defines.h"
 #include <math.h>
+#include <string.h>
 
 
 extern uint8_t endschalter_flag_x;
 extern uint8_t endschalter_flag_y;
-volatile steps_x = 0, steps_y = 0;
+
+#define STEPS_PER_REVOLUTION_x 200
+#define STEPS_PER_REVOLUTION_Y 200
+#define DISTANCE_PER_REVOLUTION_X 0.5 // Strecke pro Umdrehung in mm
+#define DISTANCE_PER_REVOLUTION_Y 0.5 // Strecke pro Umdrehung in mm
 
 typedef enum {
     links = 0,
     rechts = 1
 } Richtung;
+
+Strecke_Steps_RPM convertToStepsAndRPM(Strecke s);
 
 
 class Marvin_Steppers{
@@ -73,10 +80,17 @@ public:
   uint8_t y_flag;
   uint16_t prescaler;
   int number_of_steps_x, number_of_steps_y; // total number of steps per revolution
+  void startTimer3();
+  void stopTimer3();
+  void startTimer4();
+  void stopTimer4();
+  void setDirectionMotorX(char *str);
+  void setDirectionMotorY(char *str);
 
   int version();
 
 private:
+  void stopTimer();
   int direction_x, direction_y;
   unsigned long step_delay_x, step_delay_y; // delay between steps, in ms
   int step_number_x, step_number_y;

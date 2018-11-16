@@ -34,9 +34,20 @@ typedef struct {
     float x;
     float y;
     float f;
+
     uint8_t error;
     uint8_t end_session;
 }Strecke;
+
+typedef struct {
+    int steps_x;
+    int steps_y;
+    float rpm_x;
+    float rpm_y;
+
+    uint8_t error;
+    uint8_t end_session;
+}Strecke_Steps_RPM;
 
 uint8_t checkConnection();
 communication_alphabet checkForValidMessage();

@@ -1,5 +1,7 @@
 #include "Marvin_Motor.h"
 
+volatile uint16_t steps_x = 0, steps_y = 0;
+
 void Marvin_Steppers::doHoming()
 {
   // Set Speed to pretty Slow
@@ -115,6 +117,21 @@ void Marvin_Steppers::stepPWM(int steps_to_move_x, int steps_to_move_y, float sp
   count = 65536 - cmt * 16000000L / this->prescaler;
   OCR2A = round_count;
   // Set Steps
+  if(steps_to_move_x < 0)
+  {
+    this->setDirectionMotorX("rechts");
+    steps_to_move_x = -steps_to_move_x;
+  }else{
+    this->setDirectionMotorX("links");
+  }
+
+  if(steps_to_move_y < 0)
+  {
+    this->setDirectionMotorY("rechts");
+    steps_to_move_y = -steps_to_move_y;
+  }else{
+    this->setDirectionMotorY("links");
+  }
   steps_x = steps_to_move_x;
   steps_y = steps_to_move_y;
 }
@@ -201,4 +218,61 @@ void Marvin_Steppers::step(int steps_to_move_x, int steps_to_move_y)
       steps_left_y--;
     }
   }
+}
+
+void Marvin_Steppers::stopTimer3(){
+  // Stop Timer
+  TCCR3B &=~ (1 << CS32) | (1 << CS31) | (1 << CS30);
+}
+
+
+void Marvin_Steppers::startTimer3(){
+  // Start Timer 
+    TCCR3B |= (1 << CS31); // Prescaler 8
+}
+
+void Marvin_Steppers::stopTimer4(){
+  // Stop Timer
+  TCCR4B &=~ (1 << CS42) | (1 << CS41) | (1 << CS40);
+}
+
+
+void Marvin_Steppers::startTimer4(){
+  // Start Timer 
+    TCCR4B |= (1 << CS41); // Prescaler 8
+}
+
+void Marvin_Steppers::setDirectionMotorX(char* str)
+{
+  if (strcmp("rechts", str) == 0)
+  {
+    digitalWrite(DIR1, HIGH);
+  }else if(strcmp("links", str) == 0){
+    digitalWrite(DIR1, LOW);
+  }
+}
+
+
+void Marvin_Steppers::setDirectionMotorY(char* str)
+{
+  if (strcmp("rechts", str) == 0)
+  {
+    digitalWrite(DIR2, HIGH);
+  }else if(strcmp("links", str) == 0){
+    digitalWrite(DIR2, LOW);
+  }
+
+}
+
+Strecke_Steps_RPM convertToStepsAndRPM(Strecke s)
+{
+  float distance_per_step_x = DISTANCE_PER_REVOLUTION_X/STEPS_PER_REVOLUTION_X;
+  float distance_per_step_y = DISTANCE_PER_REVOLUTION_Y/STEPS_PER_REVOLUTION_Y;
+
+Strecke_Steps_RPM ssp;
+ssp.steps_x = (int)s.x / distance_per_step_x;
+ssp.steps_y = (int)s.y / distance_per_step_y;
+ssp.rpm_x = 
+ssp.rpm_y = 
+
 }
