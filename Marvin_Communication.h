@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include <string.h>
 #include "Pin_Defines.h"
+#include "Marvin_Motor.h"
 
 #define dict_length 20
 #define MESSAGE_TIMEOUT (unsigned long)500  // Timeout in ms
@@ -30,24 +31,7 @@ String comm_dict[20]= {
     "__Receive_Successfull__"
 };
 
-typedef struct {
-    float x;
-    float y;
-    float f;
 
-    uint8_t error;
-    uint8_t end_session;
-}Strecke;
-
-typedef struct {
-    int steps_x;
-    int steps_y;
-    float rpm_x;
-    float rpm_y;
-
-    uint8_t error;
-    uint8_t end_session;
-}Strecke_Steps_RPM;
 
 uint8_t checkConnection();
 communication_alphabet checkForValidMessage();

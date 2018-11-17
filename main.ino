@@ -1,9 +1,7 @@
 #include <Arduino.h>
 #include "Pin_Defines.h"
-#include "Marvin_Motor.h"
 #include "Marvin_Communication.h"
-#include <SPI.h>
-#include <SD.h>
+#include "Marvin_Motor.h"
 
 extern uint8_t endschalter_flag_x;
 extern uint8_t endschalter_flag_y;
@@ -99,8 +97,8 @@ void loop(){
           if (s.error == 0 && s.end_session == 0)
           {
             // TODO: ADD CONVERT TO STEPS HERE
-            s = convertToStepsAndRPM(s);
-            stepper_motors.stepPWM(1,1,1,1);
+            Strecke_Steps_RPM s1 = convertToStepsAndRPM(s);
+            stepper_motors.stepPWM(s1);
           }
           // In other case leave while loop
           else

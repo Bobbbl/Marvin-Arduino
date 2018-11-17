@@ -10,15 +10,47 @@
 extern uint8_t endschalter_flag_x;
 extern uint8_t endschalter_flag_y;
 
-#define STEPS_PER_REVOLUTION_x 200
+#define STEPS_PER_REVOLUTION_X 200
 #define STEPS_PER_REVOLUTION_Y 200
 #define DISTANCE_PER_REVOLUTION_X 0.5 // Strecke pro Umdrehung in mm
 #define DISTANCE_PER_REVOLUTION_Y 0.5 // Strecke pro Umdrehung in mm
 
+#define STEPS_PER_MILLIMETER_X 400  // Wieviele Schritte ergeben einen Millimeter X
+#define STEPS_PER_MILLIMETER_Y 400  // Vieviele Schritte ergeben einen Millimeter Y
+
 typedef enum {
     links = 0,
     rechts = 1
-} Richtung;
+}Richtung;
+
+typedef struct {
+    float x;
+    float y;
+    float f;
+
+    uint8_t error;
+    uint8_t end_session;
+}Strecke;
+
+typedef struct {
+    int steps_x;
+    int steps_y;
+    float rpm_x;
+    float rpm_y;
+
+    uint8_t error;
+    uint8_t end_session;
+}Strecke_Steps_RPM;
+
+typedef struct {
+  float x;
+  float y;
+}Point;
+
+typedef struct {
+  float x;
+  float y;
+}Vector;
 
 Strecke_Steps_RPM convertToStepsAndRPM(Strecke s);
 
@@ -46,7 +78,7 @@ public:
     TCCR3A &= ~(1 << COM3A1); // Toggle OC3A (PE3) bzw. PWM 6 on Compare Match
     // Prescaler
     this->prescaler = 8;
-    TCCR3B |= (1 << CS31); // Prescaler 8
+    // TCCR3B |= (1 << CS31); // Prescaler 8
     // Interrupts
     TIMSK3 |= (1 << OCIE3A); // Output Compare Interrupt Enabled
     OCR3A = 0;
@@ -61,14 +93,14 @@ public:
     TCCR4A &= ~(1 << COM4A1); // Toggle OC3A (PE3) bzw. PWM 6 on Compare Match
     // Prescaler
     this->prescaler = 8;
-    TCCR4B |= (1 << CS41); // Prescaler 8
+    // TCCR4B |= (1 << CS41); // Prescaler 8
     // Interrupts
     TIMSK4 |= (1 << OCIE4A); // Output Compare Interrupt Enabled
     OCR4A = 0;
     interrupts();
   }
 
-  void stepPWM(int steps_to_move_x, int steps_to_move_y, float speed_x, float speed_y);
+  void stepPWM(Strecke_Steps_RPM s);
   void setSpeed_x(long whatSpeed);
   void setSpeed_y(long whatSpeed);
   void step(int steps_to_move_x, int steps_to_move_y);

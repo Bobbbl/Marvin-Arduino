@@ -101,39 +101,41 @@ void Marvin_Steppers::setSpeed_y(long whatSpeed){
     this->step_delay_y = 60L * 1000L * 1000L / this->number_of_steps_y / whatSpeed;
 }
 
-void Marvin_Steppers::stepPWM(int steps_to_move_x, int steps_to_move_y, float speed_x, float speed_y){
+void Marvin_Steppers::stepPWM(Strecke_Steps_RPM s){
   // Set speed X
   // Formel: MAXCOUNT - Compare Match Time*CPUFRQ/Prescaler
-  float spm = speed_x * this->number_of_steps_x;
+  float spm = 65536 - s.rpm_x * this->number_of_steps_x;
   float ips = 2 * spm;
   float cmt = 1 / ips;
   float count = 65536 - cmt * 16000000L / this->prescaler;
   uint16_t round_count = (uint16_t)round(count);
   OCR3A = round_count;
   // Set speed Y
-  spm = speed_y * this->number_of_steps_y;
+  spm =  65536 - s.rpm_y * this->number_of_steps_y;
   ips = 2 * spm;
   cmt = 1 / ips;
   count = 65536 - cmt * 16000000L / this->prescaler;
   OCR2A = round_count;
   // Set Steps
-  if(steps_to_move_x < 0)
+  if(s.steps_x < 0)
   {
     this->setDirectionMotorX("rechts");
-    steps_to_move_x = -steps_to_move_x;
+    steps_x = s.steps_x;
   }else{
     this->setDirectionMotorX("links");
+    steps_x = s.steps_y;
   }
 
-  if(steps_to_move_y < 0)
+  if(s.steps_y < 0)
   {
     this->setDirectionMotorY("rechts");
-    steps_to_move_y = -steps_to_move_y;
+    steps_y = -s.steps_y;
   }else{
     this->setDirectionMotorY("links");
   }
-  steps_x = steps_to_move_x;
-  steps_y = steps_to_move_y;
+
+  this->startTimer3();
+  this->startTimer4();
 }
 
 void Marvin_Steppers::step(int steps_to_move_x, int steps_to_move_y)
@@ -266,13 +268,41 @@ void Marvin_Steppers::setDirectionMotorY(char* str)
 
 Strecke_Steps_RPM convertToStepsAndRPM(Strecke s)
 {
-  float distance_per_step_x = DISTANCE_PER_REVOLUTION_X/STEPS_PER_REVOLUTION_X;
-  float distance_per_step_y = DISTANCE_PER_REVOLUTION_Y/STEPS_PER_REVOLUTION_Y;
+  float distance_per_step_x = DISTANCE_PER_REVOLUTION_X / STEPS_PER_REVOLUTION_X;
+  float distance_per_step_y = DISTANCE_PER_REVOLUTION_Y / STEPS_PER_REVOLUTION_Y;
 
-Strecke_Steps_RPM ssp;
-ssp.steps_x = (int)s.x / distance_per_step_x;
-ssp.steps_y = (int)s.y / distance_per_step_y;
-ssp.rpm_x = 
-ssp.rpm_y = 
+  Strecke_Steps_RPM ssp;
+  ssp.steps_x = (int)s.x / distance_per_step_x;
+  ssp.steps_y = (int)s.y / distance_per_step_y;
 
+  /* RPM */
+  static Point last_point = {.x = 0, .y = 0};
+  Point this_point;
+  Vector vector;
+
+  this_point.x = s.x;
+  this_point.y = s.y;
+  // Vector berechnen
+  vector.x = this_point.x - last_point.x;
+  vector.y = this_point.y - last_point.y;
+  // Laenge Vektor berechnen
+  float h = sqrtf(vector.x * vector.x + vector.y * vector.y);
+  // Zeit berechnen
+  float t = h / s.f;
+  // Millimeter in Steps
+  unsigned long sx = abs(s.x) * STEPS_PER_MILLIMETER_X;
+  unsigned long sy = abs(s.y) * STEPS_PER_MILLIMETER_Y;
+  // Umdrehungen
+  float rx = sx * STEPS_PER_REVOLUTION_X;
+  float ry = sy * STEPS_PER_REVOLUTION_Y;
+  // RPMs
+  float rpmx = rx / t * 60;
+  float rpmy = ry / t * 60;
+
+  ssp.rpm_x = rpmx;
+  ssp.rpm_y = rpmy;
+  ssp.error = 0;
+  ssp.end_session = 0;
+
+  return ssp;
 }
