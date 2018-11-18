@@ -1,6 +1,6 @@
 #include "Marvin_Communication.h"
 
-
+#define DEBUG
 
 uint8_t checkConnection(){
     return Serial.available();
@@ -19,7 +19,7 @@ uint8_t checkConnection(){
             break;
         }
 
-        delay(500);
+        delay(100);
 
         if(Serial.available() != 0)
         {
@@ -31,8 +31,9 @@ uint8_t checkConnection(){
     // will be no Problem
     String m = Serial.readString();
     // Check if Message is Part of registered Messages
-    for(int i = 0; i<=sizeof(comm_dict)/sizeof(comm_dict[0]); i++){
-        if(m.compareTo(comm_dict[i])){
+    for(int i = 0; i<=COMM_LENGTH-1; i++){
+        if(m == comm_dict[i])
+        {
             return (communication_alphabet)i;
         }
     }
@@ -44,12 +45,15 @@ uint8_t checkConnection(){
 
 communication_alphabet waitForSession(){
     communication_alphabet message = No_Message;
-    while(message == -1){
-        communication_alphabet message;
+    do
+    {
         message = checkForValidMessage();
         // Send NACK
-        sendNack();
-    }
+        if (message != No_Message)
+        {
+            sendNack();
+        }
+    } while (message == No_Message);
 }
 
 
@@ -58,13 +62,11 @@ communication_alphabet waitForKonsekutiveMessage(){
     unsigned long first = millis(); // Saves Time of First Entering Function for Timeout Function
     unsigned long now = millis();   // Variable for This Loop Time
     // Enter Waiting Loop
-    while (message == -1)
-    {
+    while (message == No_Message){
         now = millis();
-        communication_alphabet message;
         message = checkForValidMessage();
         // Check For Timeout
-        if ((now - first) >= 1000)
+        if ((now - first) >= 5000)
         {
             return No_Message;
         }

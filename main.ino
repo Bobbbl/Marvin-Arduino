@@ -3,6 +3,7 @@
 #include "Marvin_Communication.h"
 #include "Marvin_Motor.h"
 
+
 extern uint8_t endschalter_flag_x;
 extern uint8_t endschalter_flag_y;
 extern volatile uint16_t steps_x, steps_y;
@@ -75,13 +76,12 @@ void loop(){
   {
     // Wait for Messages
     communication_alphabet message;
+    message = No_Message;
     message = waitForSession();
-
     // Übertragung gestartet
     if (message == Start_Session)
     {
       message = waitForKonsekutiveMessage();
- 
       switch (message)
       {
       case End_Session:
@@ -96,7 +96,6 @@ void loop(){
           // drive Motor
           if (s.error == 0 && s.end_session == 0)
           {
-            // TODO: ADD CONVERT TO STEPS HERE
             Strecke_Steps_RPM s1 = convertToStepsAndRPM(s);
             stepper_motors.stepPWM(s1);
           }
@@ -111,6 +110,7 @@ void loop(){
 
       case Start_Homing:
         // Do Homing
+        Serial.println("Homing");
         stepper_motors.doHoming();
         // Homing done
         sendEndSession();

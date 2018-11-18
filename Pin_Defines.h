@@ -2,6 +2,7 @@
 #define PiN_DEFINES
 
 #include <Arduino.h>
+#define DEBUG
 
 #define PWM1 5
 #define PWM2 6

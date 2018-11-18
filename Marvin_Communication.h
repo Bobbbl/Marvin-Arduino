@@ -21,7 +21,9 @@ Receive_Successfull = 6,
 No_Message = -1
 }communication_alphabet;
 
-String comm_dict[20]= {
+#define COMM_LENGTH 7
+
+String comm_dict[7]= {
     "__Start_Session__",
     "__End_Session__",
     "__Start_Homing__",
