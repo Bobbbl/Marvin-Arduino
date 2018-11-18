@@ -191,15 +191,18 @@ Strecke receivePoint(){
     {
         sendError();
         sendEndSession();
+        return s;
     }
     else if (s.end_session == 1)
     {
         sendEndSession();
+        return s;
     }
     else if (s.end_session == 0 && s.error == 0)
     {
         // Inform Client that everything went as expected
         sendReceiveSuccessfull();
+        return s;
     }
 }
 
