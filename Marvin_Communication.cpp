@@ -66,7 +66,7 @@ communication_alphabet waitForKonsekutiveMessage(){
         now = millis();
         message = checkForValidMessage();
         // Check For Timeout
-        if ((now - first) >= 5000)
+        if ((now - first) >= 1000)
         {
             return No_Message;
         }
@@ -79,13 +79,13 @@ communication_alphabet waitForKonsekutiveMessage(){
 
 
 inline void sendNack(){
-    Serial.print(comm_dict[Empfang_Bestaetigt]);
+    Serial.println(comm_dict[Empfang_Bestaetigt]);
 }
 
 
 inline void sendEndSession()
 {
-    Serial.print(comm_dict[End_Session]);
+    Serial.println(comm_dict[End_Session]);
 }
 
 
@@ -208,9 +208,9 @@ Strecke receivePoint(){
 
 
 inline void sendError(){
-    Serial.print(comm_dict[Receive_Error]);
+    Serial.println(comm_dict[Receive_Error]);
 }
 
 inline void sendReceiveSuccessfull(){
-    Serial.print(comm_dict[Receive_Successfull]);
+    Serial.println(comm_dict[Receive_Successfull]);
 }
