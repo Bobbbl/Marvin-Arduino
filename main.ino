@@ -93,6 +93,7 @@ void loop(){
         while(1){
           // Receive new Point - Function handles all Communication
           s = receivePoint();
+
           // drive Motor
           if (s.error == 0 && s.end_session == 0)
           {

@@ -7,7 +7,7 @@
 #include "Marvin_Motor.h"
 
 #define dict_length 20
-#define MESSAGE_TIMEOUT (unsigned long)500  // Timeout in ms
+#define MESSAGE_TIMEOUT (unsigned long)1000  // Timeout in ms
 
 using namespace std;
 

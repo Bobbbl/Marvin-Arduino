@@ -100,9 +100,9 @@ Strecke readToolPathLine()
     communication_alphabet message = No_Message;
     // Check if Line is Communication Alphabet Message (like End_Session)
     // which would mean, that transmission would be over
-    for (int i = 0; i <= sizeof(comm_dict) / sizeof(comm_dict[0]); i++)
+    for (int i = 0; i <= COMM_LENGTH-1; i++)
     {
-        if (line.compareTo(comm_dict[i]))
+        if (line == comm_dict[i])
         {
             message = (communication_alphabet)i;
         }
@@ -115,12 +115,6 @@ Strecke readToolPathLine()
             // No error
             r.end_session = 1;
         }
-        else
-        {
-            // There must be an error, so cancel session
-            r.error = 1;
-            return r;
-        }
     }
 
     // Search for the indices of X, Y and F
@@ -131,7 +125,7 @@ Strecke readToolPathLine()
     pos_X = line.indexOf('X');
     pos_Y = line.indexOf('Y');
     pos_F = line.indexOf('F');
-    if (pos_X == 0 || pos_Y == 0 || pos_F == 0)
+    if (pos_Y == 0 || pos_F == 0)
     {
         // There must be an error
         r.error = 1;
@@ -165,7 +159,7 @@ Strecke readToolPathLine()
 //          0 for no error and no end_session
 //          1 for end message
 Strecke receiveKoordinate(){
-    Strecke s;
+    Strecke s = {.x = 0, .y = 0, .f = 0, .error = 1, .end_session = 0};
     unsigned long now = millis();
     do
     {
@@ -182,6 +176,7 @@ Strecke receiveKoordinate(){
             }
         }
     } while (millis() - now < MESSAGE_TIMEOUT);
+    return s;
 }
 
 Strecke receivePoint(){
