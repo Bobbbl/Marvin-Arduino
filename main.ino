@@ -18,15 +18,16 @@ Marvin_Steppers stepper_motors(PWM1, PWM2, DIR1, DIR2);
 ISR(TIMER3_COMPA_vect)
 {
   static uint8_t s_check = 1;
-  if(s_check++ == 2)
-  {
-    steps_x--;
-  }
 
   if(steps_x<=0)
   {
     // Stop Timer
     stepper_motors.stopTimer3();
+  }
+
+  if(s_check++ == 2)
+  {
+    steps_x--;
   }
   
 }
@@ -35,16 +36,18 @@ ISR(TIMER3_COMPA_vect)
 ISR(TIMER4_COMPA_vect)
 {
   static uint8_t s_check = 1;
-  if(s_check++ == 2)
-  {
-    steps_y--;
-  }
 
   if(steps_y <=0)
   {
     // Stop Timer
     stepper_motors.stopTimer4();
   }
+
+  if(s_check++ == 2)
+  {
+    steps_y--;
+  }
+
 }
 
 void setup(){
@@ -99,6 +102,10 @@ void loop(){
           {
             Strecke_Steps_RPM s1 = convertToStepsAndRPM(s);
             stepper_motors.stepPWM(s1);
+            while(steps_x != 0 || steps_y != 0){
+              delay(500);
+            }
+            sendPointReached();
           }
           // In other case leave while loop
           else

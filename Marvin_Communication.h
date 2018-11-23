@@ -7,7 +7,7 @@
 #include "Marvin_Motor.h"
 
 #define dict_length 20
-#define MESSAGE_TIMEOUT (unsigned long)1000  // Timeout in ms
+#define MESSAGE_TIMEOUT (unsigned long)5000  // Timeout in ms
 
 using namespace std;
 
@@ -18,19 +18,21 @@ Send_Toolpath = 3,
 Empfang_Bestaetigt = 4,
 Receive_Error = 5,
 Receive_Successfull = 6,
+Point_Reached = 7,
 No_Message = -1
 }communication_alphabet;
 
-#define COMM_LENGTH 7
+#define COMM_LENGTH 8
 
-String comm_dict[7]= {
+String comm_dict[COMM_LENGTH]= {
     "__Start_Session__",
     "__End_Session__",
     "__Start_Homing__",
     "__Send_Toolpath__",
     "__Empfang_Besteatigt__",
     "__Receive_Error__",
-    "__Receive_Successfull__"
+    "__Receive_Successfull__",
+    "__Point_Reached__"
 };
 
 

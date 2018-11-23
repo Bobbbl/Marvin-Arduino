@@ -132,6 +132,7 @@ void Marvin_Steppers::stepPWM(Strecke_Steps_RPM s){
     steps_y = -s.steps_y;
   }else{
     this->setDirectionMotorY("links");
+    steps_y = -s.steps_y;
   }
 
   this->startTimer3();
@@ -224,7 +225,8 @@ void Marvin_Steppers::step(int steps_to_move_x, int steps_to_move_y)
 
 void Marvin_Steppers::stopTimer3(){
   // Stop Timer
-  TCCR3B &=~ (1 << CS32) | (1 << CS31) | (1 << CS30);
+  //TCCR3B &=~ (1 << CS32) | (1 << CS31) | (1 << CS30);
+  TCCR3B = 0x00;
 }
 
 
@@ -235,7 +237,8 @@ void Marvin_Steppers::startTimer3(){
 
 void Marvin_Steppers::stopTimer4(){
   // Stop Timer
-  TCCR4B &=~ (1 << CS42) | (1 << CS41) | (1 << CS40);
+  //TCCR4B &=~ (1 << CS42) | (1 << CS41) | (1 << CS40);
+  TCCR4B = 0x00;
 }
 
 

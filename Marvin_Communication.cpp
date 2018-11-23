@@ -209,3 +209,7 @@ inline void sendError(){
 inline void sendReceiveSuccessfull(){
     Serial.println(comm_dict[Receive_Successfull]);
 }
+
+inline void sendPointReached(){
+    Serial.println(comm_dict[Point_Reached]);
+}
