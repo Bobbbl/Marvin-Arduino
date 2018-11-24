@@ -309,5 +309,9 @@ Strecke_Steps_RPM convertToStepsAndRPM(Strecke s)
   ssp.error = 0;
   ssp.end_session = 0;
 
+  last_point.x = this_point.x;
+  last_point.y = this_point.y;
+
+
   return ssp;
 }
