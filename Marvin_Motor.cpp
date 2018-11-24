@@ -120,7 +120,7 @@ void Marvin_Steppers::stepPWM(Strecke_Steps_RPM s){
   if(s.steps_x < 0)
   {
     this->setDirectionMotorX("rechts");
-    steps_x = s.steps_x;
+    steps_x = -s.steps_x;
   }else{
     this->setDirectionMotorX("links");
     steps_x = s.steps_y;
@@ -132,7 +132,7 @@ void Marvin_Steppers::stepPWM(Strecke_Steps_RPM s){
     steps_y = -s.steps_y;
   }else{
     this->setDirectionMotorY("links");
-    steps_y = -s.steps_y;
+    steps_y = s.steps_y;
   }
 
   this->startTimer3();
@@ -290,14 +290,16 @@ Strecke_Steps_RPM convertToStepsAndRPM(Strecke s)
   vector.y = this_point.y - last_point.y;
   // Laenge Vektor berechnen
   float h = sqrtf(vector.x * vector.x + vector.y * vector.y);
+
+
   // Zeit berechnen
   float t = h / s.f;
   // Millimeter in Steps
   unsigned long sx = abs(s.x) * STEPS_PER_MILLIMETER_X;
   unsigned long sy = abs(s.y) * STEPS_PER_MILLIMETER_Y;
   // Umdrehungen
-  float rx = sx * STEPS_PER_REVOLUTION_X;
-  float ry = sy * STEPS_PER_REVOLUTION_Y;
+  float rx = sx / STEPS_PER_REVOLUTION_X;
+  float ry = sy / STEPS_PER_REVOLUTION_Y;
   // RPMs
   float rpmx = rx / t * 60;
   float rpmy = ry / t * 60;
