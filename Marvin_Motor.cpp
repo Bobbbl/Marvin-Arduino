@@ -1,6 +1,7 @@
 #include "Marvin_Motor.h"
 
 volatile uint16_t steps_x = 0, steps_y = 0;
+volatile unsigned long pulses_x = 0, pulses_y = 0;
 
 void Marvin_Steppers::doHoming()
 {
@@ -109,13 +110,15 @@ void Marvin_Steppers::stepPWM(Strecke_Steps_RPM s){
   float cmt = 1 / ips;
   float count = 65536 - cmt * 16000000L / this->prescaler;
   uint16_t round_count = (uint16_t)round(count);
-  OCR3A = round_count;
+  OCR3A = round_count*10;
   // Set speed Y
   spm =  65536 - s.rpm_y * this->number_of_steps_y;
   ips = 2 * spm;
   cmt = 1 / ips;
   count = 65536 - cmt * 16000000L / this->prescaler;
-  OCR2A = round_count;
+  round_count = (uint16_t)round(count);
+  OCR4A = round_count*10;
+  Serial.println(round_count);
   // Set Steps
   if(s.steps_x < 0)
   {
@@ -133,6 +136,80 @@ void Marvin_Steppers::stepPWM(Strecke_Steps_RPM s){
   }else{
     this->setDirectionMotorY("links");
     steps_y = s.steps_y;
+  }
+
+  this->startTimer3();
+  this->startTimer4();
+}
+
+void Marvin_Steppers::easyStep(Strecke s){
+  static Point lastpoint = {.x = 0, .y = 0};
+  Point thispoint = {.x = s.x, .y = s.y};
+  Vector v = {.x = thispoint.x-lastpoint.x, .y=thispoint.y-lastpoint.y};
+  Vector xachse = {.x=1, .y=0};
+  Vector yachse = {.x=0, .y=1};
+
+  // Winkel Zwischen Vorschubvektor und X-Achse
+  float alpha = acos(v.x*xachse.x + v.y*yachse.y)/(sqrt(v.x*v.x + v.y*v.y)*sqrt(xachse.x*xachse.x + xachse.y*xachse.y));
+  // Geschwindigkeitsanteile X und Y
+  float fx = cos(alpha)*s.f;
+  float fy = sin(alpha)*s.f;
+ // RPM
+  unsigned int rpmx = (fx * STEPS_PER_MILLIMETER_X)/STEPS_PER_REVOLUTION_X; 
+  unsigned int rpmy = (fy * STEPS_PER_MILLIMETER_Y)/STEPS_PER_REVOLUTION_Y; 
+  // RPS
+  float rpsx = rpmx/60;
+  float rpsy = rpmy/60;
+  uint16_t maxcount = 2^16;
+  // Schritte pro Minute
+  unsigned int spmx = fx * STEPS_PER_MILLIMETER_X;
+  unsigned int spmy = fy * STEPS_PER_MILLIMETER_Y;
+  // Schritte pro Sekunde
+  float spsx = spmx/60;
+  float spsy = spmy/60;
+  // Pulse pro Sekunde
+  float ppsx = spsx*2;
+  float ppsy = spsy*2;
+  // Compare Match Time
+  float cmtx = 1/ppsx;
+  float cmty = 1/ppsy;
+  // count
+  float countx = maxcount-cmtx*16000000/this->prescaler;
+  float county = maxcount-cmty*16000000/this->prescaler;
+  float roundcountx = round(countx);
+  float roundcounty = round(county);
+  // Pulsdifferenz
+  float pdiffx = roundcountx - countx;
+  float pdiffy = roundcounty - county;
+  // Pulse insgesamt 
+  unsigned long pix = STEPS_PER_MILLIMETER_X * v.x;
+  unsigned long piy = STEPS_PER_MILLIMETER_Y * v.y;
+  // Pulsfehler
+  float pfx = pix*pdiffx;
+  float pfy = piy*pdiffy;
+
+  OCR3A = roundcountx; 
+  OCR4A = roundcounty;
+  //Korrektur
+  unsigned long korrekturx = pix + pfx;
+  unsigned long korrektury = piy + pfx;
+  // Set Steps
+  if(v.x < 0)
+  {
+    this->setDirectionMotorX("rechts");
+    pulses_x = korrekturx;
+  }else{
+    this->setDirectionMotorX("links");
+    pulses_x = korrekturx;
+  }
+
+  if(v.y < 0)
+  {
+    this->setDirectionMotorY("rechts");
+    pulses_y = korrektury;
+  }else{
+    this->setDirectionMotorY("links");
+    pulses_y = korrektury;
   }
 
   this->startTimer3();
@@ -225,26 +302,25 @@ void Marvin_Steppers::step(int steps_to_move_x, int steps_to_move_y)
 
 void Marvin_Steppers::stopTimer3(){
   // Stop Timer
-  //TCCR3B &=~ (1 << CS32) | (1 << CS31) | (1 << CS30);
-  TCCR3B = 0x00;
+  TCCR3B &=~ ((1 << CS32) | (1 << CS31) | (1 << CS30));
+  // TCCR3B = 0x00;
 }
 
 
 void Marvin_Steppers::startTimer3(){
   // Start Timer 
-    TCCR3B |= (1 << CS31); // Prescaler 8
+    TCCR3B |= (1 << CS32); // Prescaler 256
 }
 
 void Marvin_Steppers::stopTimer4(){
   // Stop Timer
-  //TCCR4B &=~ (1 << CS42) | (1 << CS41) | (1 << CS40);
-  TCCR4B = 0x00;
+  TCCR4B &=~ ((1 << CS42) | (1 << CS41) | (1 << CS40));
 }
 
 
 void Marvin_Steppers::startTimer4(){
   // Start Timer 
-    TCCR4B |= (1 << CS41); // Prescaler 8
+    TCCR4B |= (1 << CS42); // Prescaler 256
 }
 
 void Marvin_Steppers::setDirectionMotorX(char* str)
@@ -294,6 +370,7 @@ Strecke_Steps_RPM convertToStepsAndRPM(Strecke s)
 
   // Zeit berechnen
   float t = h / s.f;
+  t = t * 60;
   // Millimeter in Steps
   unsigned long sx = abs(s.x) * STEPS_PER_MILLIMETER_X;
   unsigned long sy = abs(s.y) * STEPS_PER_MILLIMETER_Y;

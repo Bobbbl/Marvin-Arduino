@@ -7,6 +7,7 @@
 extern uint8_t endschalter_flag_x;
 extern uint8_t endschalter_flag_y;
 extern volatile uint16_t steps_x, steps_y;
+extern volatile unsigned long pulses_x, pulses_y;
 
 const int chipSelect = CS;
 
@@ -17,37 +18,51 @@ Marvin_Steppers stepper_motors(PWM1, PWM2, DIR1, DIR2);
 // This is Motor X
 ISR(TIMER3_COMPA_vect)
 {
-  static uint8_t s_check = 1;
+  // static uint8_t s_check = 1;
+  // digitalWrite(PWM1, !digitalRead(PWM1));
 
-  if(steps_x<=0)
+  // if(steps_x<=0)
+  // {
+  //   // Stop Timer
+  //   stepper_motors.stopTimer3();
+  // }
+
+  // if(s_check++ == 2)
+  // {
+  //   steps_x--;
+  // }
+  
+  if(pulses_x-- <= 0)
   {
-    // Stop Timer
+    // Stop Timer 3
     stepper_motors.stopTimer3();
   }
-
-  if(s_check++ == 2)
-  {
-    steps_x--;
-  }
-  
+  digitalWrite(PWM1, !digitalRead(PWM1));
 }
 
 // This is Motor Y
 ISR(TIMER4_COMPA_vect)
 {
-  static uint8_t s_check = 1;
+  // static uint8_t s_check = 1;
+  // digitalWrite(PWM2, !digitalRead(PWM2));
 
-  if(steps_y <=0)
+  // if(steps_y <=0)
+  // {
+  //   // Stop Timer
+  //   stepper_motors.stopTimer4();
+  // }
+
+  // if(s_check++ == 2)
+  // {
+  //   steps_y--;
+  // }
+
+  if(pulses_y-- <= 0)
   {
-    // Stop Timer
+    // Stop Timer 4
     stepper_motors.stopTimer4();
   }
-
-  if(s_check++ == 2)
-  {
-    steps_y--;
-  }
-
+  digitalWrite(PWM2, !digitalRead(PWM2));
 }
 
 void setup(){
@@ -101,9 +116,10 @@ void loop(){
           if (s.error == 0 && s.end_session == 0)
           {
             Strecke_Steps_RPM s1 = convertToStepsAndRPM(s);
-            stepper_motors.stepPWM(s1);
+            // stepper_motors.stepPWM(s1);
+            stepper_motors.easyStep(s);
             while(steps_x != 0 || steps_y != 0){
-              delay(500);
+              delay(10);
             }
             sendPointReached();
           }
