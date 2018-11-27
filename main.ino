@@ -115,7 +115,7 @@ void loop(){
           // drive Motor
           if (s.error == 0 && s.end_session == 0)
           {
-            Strecke_Steps_RPM s1 = convertToStepsAndRPM(s);
+            // Strecke_Steps_RPM s1 = convertToStepsAndRPM(s);
             // stepper_motors.stepPWM(s1);
             stepper_motors.easyStep(s);
             while(steps_x != 0 || steps_y != 0){
