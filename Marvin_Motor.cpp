@@ -148,36 +148,41 @@ void Marvin_Steppers::easyStep(Strecke s){
   Vector v = {.x = thispoint.x-lastpoint.x, .y=thispoint.y-lastpoint.y};
   Vector xachse = {.x=1, .y=0};
   Vector yachse = {.x=0, .y=1};
-
   // Winkel Zwischen Vorschubvektor und X-Achse
-  float alpha = acos(v.x*xachse.x + v.y*yachse.y)/(sqrt(v.x*v.x + v.y*v.y)*sqrt(xachse.x*xachse.x + xachse.y*xachse.y));
+  float alpha = acos((v.x*xachse.x + v.y*xachse.y)/(sqrt(v.x*v.x + v.y*v.y)*sqrt(xachse.x*xachse.x + xachse.y*xachse.y)));
   // Geschwindigkeitsanteile X und Y
   float fx = cos(alpha)*s.f;
   float fy = sin(alpha)*s.f;
+
+  
  // RPM
   unsigned int rpmx = (fx * STEPS_PER_MILLIMETER_X)/STEPS_PER_REVOLUTION_X; 
   unsigned int rpmy = (fy * STEPS_PER_MILLIMETER_Y)/STEPS_PER_REVOLUTION_Y; 
+
   // RPS
   float rpsx = rpmx/60;
   float rpsy = rpmy/60;
-  uint16_t maxcount = 2^16;
-  // Schritte pro Minute
-  unsigned int spmx = fx * STEPS_PER_MILLIMETER_X;
-  unsigned int spmy = fy * STEPS_PER_MILLIMETER_Y;
-  // Schritte pro Sekunde
-  float spsx = spmx/60;
-  float spsy = spmy/60;
-  // Pulse pro Sekunde
-  float ppsx = spsx*2;
-  float ppsy = spsy*2;
-  // Compare Match Time
-  float cmtx = 1/ppsx;
-  float cmty = 1/ppsy;
+  float maxcount = 65536;
+
+//  float cmtx = sqrt(v.x*v.x+v.y*v.y)*60/s.f/STEPS_PER_MILLIMETER_X/v.x/2; 
+//  float cmty = sqrt(v.x*v.x+v.y*v.y)*60/s.f/STEPS_PER_MILLIMETER_Y/v.y/2; 
+  float cmtx = 1/((fx * STEPS_PER_MILLIMETER_X)/60*2);
+  float cmty = 1/(fy * STEPS_PER_MILLIMETER_Y/60*2);
   // count
-  float countx = maxcount-cmtx*16000000/this->prescaler;
-  float county = maxcount-cmty*16000000/this->prescaler;
-  float roundcountx = round(countx);
-  float roundcounty = round(county);
+  float countx = cmtx*16000000/this->prescaler;
+  // float countx = 65536 - 0.008077544*16000000/256; 
+  float county = cmty*16000000/this->prescaler;
+  float roundcountx = ceil(countx);
+  float roundcounty = ceil(county);
+  // Serial.println("cmtx");
+  // Serial.println(cmtx,6);
+  // Serial.println("cmty");
+  // Serial.println(cmty,6);
+  // Serial.println("fx");
+  // Serial.println(fx);
+  // Serial.println("Pulse insgesamt");
+  // Serial.println(STEPS_PER_MILLIMETER_X * v.x*2);
+  
   // Pulsdifferenz
   float pdiffx = roundcountx - countx;
   float pdiffy = roundcounty - county;
@@ -188,29 +193,44 @@ void Marvin_Steppers::easyStep(Strecke s){
   float pfx = pix*pdiffx;
   float pfy = piy*pdiffy;
 
-  OCR3A = roundcountx; 
-  OCR4A = roundcounty;
+  OCR4A = roundcountx; 
+  OCR3A = roundcounty;
+  // OCR3A = 30000; 
+  // OCR4A = 30000;
+  // Serial.println("roundcountx");
+  // Serial.println(roundcountx,6);
+  // Serial.println("roundcounty");
+  // Serial.println(roundcounty,6);
   //Korrektur
-  unsigned long korrekturx = pix + pfx;
-  unsigned long korrektury = piy + pfx;
+  // unsigned long korrekturx = pix + pfx;
+  // unsigned long korrektury = piy + pfx;
+  unsigned long korrekturx = STEPS_PER_MILLIMETER_X * v.x * 2 *(roundcountx-countx);
+  unsigned long korrektury = STEPS_PER_MILLIMETER_Y * v.y * 2 *(roundcounty-county);
   // Set Steps
   if(v.x < 0)
   {
     this->setDirectionMotorX("rechts");
-    pulses_x = korrekturx;
+    // pulses_x = korrekturx + v.x*STEPS_PER_MILLIMETER_X*2;
+    pulses_x =STEPS_PER_MILLIMETER_X * v.x*2; 
   }else{
     this->setDirectionMotorX("links");
-    pulses_x = korrekturx;
+    // pulses_x = korrekturx+ v.x*STEPS_PER_MILLIMETER_X*2;
+    pulses_x =STEPS_PER_MILLIMETER_X * v.x * 2; 
   }
 
   if(v.y < 0)
   {
     this->setDirectionMotorY("rechts");
-    pulses_y = korrektury;
+    // pulses_y = korrektury+ v.y*STEPS_PER_MILLIMETER_Y*2;
+    pulses_y =STEPS_PER_MILLIMETER_Y * v.y * 2; 
   }else{
     this->setDirectionMotorY("links");
-    pulses_y = korrektury;
+    // pulses_y = korrektury+ v.y*STEPS_PER_MILLIMETER_Y*2;
+    pulses_y =STEPS_PER_MILLIMETER_Y * v.y * 2; 
   }
+
+  lastpoint.x = thispoint.x;
+  lastpoint.y = thispoint.y;
 
   this->startTimer3();
   this->startTimer4();

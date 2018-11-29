@@ -18,51 +18,35 @@ Marvin_Steppers stepper_motors(PWM1, PWM2, DIR1, DIR2);
 // This is Motor X
 ISR(TIMER3_COMPA_vect)
 {
-  // static uint8_t s_check = 1;
-  // digitalWrite(PWM1, !digitalRead(PWM1));
-
-  // if(steps_x<=0)
-  // {
-  //   // Stop Timer
-  //   stepper_motors.stopTimer3();
-  // }
-
-  // if(s_check++ == 2)
-  // {
-  //   steps_x--;
-  // }
-  
-  if(pulses_x-- <= 0)
+  pulses_x--;
+  if(pulses_x <= 0)
   {
     // Stop Timer 3
     stepper_motors.stopTimer3();
+    pulses_x = 0;
   }
+  if(pulses_x > 0)
+  {
   digitalWrite(PWM1, !digitalRead(PWM1));
+  }
+  TCNT3 = 0;
 }
 
 // This is Motor Y
 ISR(TIMER4_COMPA_vect)
 {
-  // static uint8_t s_check = 1;
-  // digitalWrite(PWM2, !digitalRead(PWM2));
-
-  // if(steps_y <=0)
-  // {
-  //   // Stop Timer
-  //   stepper_motors.stopTimer4();
-  // }
-
-  // if(s_check++ == 2)
-  // {
-  //   steps_y--;
-  // }
-
-  if(pulses_y-- <= 0)
+  pulses_y--;
+  if(pulses_y <= 0)
   {
     // Stop Timer 4
     stepper_motors.stopTimer4();
+    pulses_y = 0;
   }
+  if(pulses_y > 0)
+  {
   digitalWrite(PWM2, !digitalRead(PWM2));
+  }
+  TCNT4 = 0;
 }
 
 void setup(){
@@ -74,6 +58,8 @@ void setup(){
   pinMode(DIR2, OUTPUT);
   pinMode(END1, INPUT);
   pinMode(END2, INPUT);
+  stepper_motors.stopTimer3();
+  stepper_motors.stopTimer4();
 
 
 }
@@ -119,7 +105,6 @@ void loop(){
             // stepper_motors.stepPWM(s1);
             stepper_motors.easyStep(s);
             while(steps_x != 0 || steps_y != 0){
-              delay(10);
             }
             sendPointReached();
           }

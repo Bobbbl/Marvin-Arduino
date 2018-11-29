@@ -10,13 +10,13 @@
 extern uint8_t endschalter_flag_x;
 extern uint8_t endschalter_flag_y;
 
-#define STEPS_PER_REVOLUTION_X 200
-#define STEPS_PER_REVOLUTION_Y 200
+#define STEPS_PER_REVOLUTION_X 800
+#define STEPS_PER_REVOLUTION_Y 800
 #define DISTANCE_PER_REVOLUTION_X 0.5 // Strecke pro Umdrehung in mm
 #define DISTANCE_PER_REVOLUTION_Y 0.5 // Strecke pro Umdrehung in mm
 
-#define STEPS_PER_MILLIMETER_X 200  // Wieviele Schritte ergeben einen Millimeter X
-#define STEPS_PER_MILLIMETER_Y 200  // Vieviele Schritte ergeben einen Millimeter Y
+#define STEPS_PER_MILLIMETER_X 800  // Wieviele Schritte ergeben einen Millimeter X
+#define STEPS_PER_MILLIMETER_Y 800  // Vieviele Schritte ergeben einen Millimeter Y
 
 typedef enum {
     links = 0,
