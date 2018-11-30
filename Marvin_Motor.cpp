@@ -138,102 +138,69 @@ void Marvin_Steppers::stepPWM(Strecke_Steps_RPM s){
     steps_y = s.steps_y;
   }
 
-  this->startTimer3();
-  this->startTimer4();
+  this->startTimer3(64);
+  this->startTimer4(64);
 }
 
 void Marvin_Steppers::easyStep(Strecke s){
   static Point lastpoint = {.x = 0, .y = 0};
-  Point thispoint = {.x = s.x, .y = s.y};
-  Vector v = {.x = thispoint.x-lastpoint.x, .y=thispoint.y-lastpoint.y};
-  Vector xachse = {.x=1, .y=0};
-  Vector yachse = {.x=0, .y=1};
-  // Winkel Zwischen Vorschubvektor und X-Achse
-  float alpha = acos((v.x*xachse.x + v.y*xachse.y)/(sqrt(v.x*v.x + v.y*v.y)*sqrt(xachse.x*xachse.x + xachse.y*xachse.y)));
-  // Geschwindigkeitsanteile X und Y
-  float fx = cos(alpha)*s.f;
-  float fy = sin(alpha)*s.f;
+  Point thispoint;
 
+  Vector v;
+
+  thispoint.x = s.x;
+  thispoint.y = s.y;
+
+  v.x = thispoint.x - lastpoint.x;
+  v.y = thispoint.y - lastpoint.y;
+
+  float f = s.f; 
+
+  float winkel = acos((v.x * 1 + v.y * 0) / (sqrt(v.x * v.x + v.y * v.y) * sqrt(1 * 1 + 0 * 0)));
+
+  float fx = cos(winkel) * f;
+  float fy = sin(winkel) * f;
+
+  float tx = v.x / fx;
+  float ty = v.y / fy;
+
+  float countx = abs((tx * 60 * CPU_FREQ) / (STEPS_PER_MILLIMETER_X * v.x * 2 * Prescaler));
+  float county = abs((ty * 60 * CPU_FREQ) / (STEPS_PER_MILLIMETER_Y * v.y * 2 * Prescaler));
+
+  float rcountx = round(countx);
+  float rcounty = round(county);
+
+  OCR3A = rcountx;
+  OCR4A = rcounty;
   
- // RPM
-  unsigned int rpmx = (fx * STEPS_PER_MILLIMETER_X)/STEPS_PER_REVOLUTION_X; 
-  unsigned int rpmy = (fy * STEPS_PER_MILLIMETER_Y)/STEPS_PER_REVOLUTION_Y; 
-
-  // RPS
-  float rpsx = rpmx/60;
-  float rpsy = rpmy/60;
-  float maxcount = 65536;
-
-//  float cmtx = sqrt(v.x*v.x+v.y*v.y)*60/s.f/STEPS_PER_MILLIMETER_X/v.x/2; 
-//  float cmty = sqrt(v.x*v.x+v.y*v.y)*60/s.f/STEPS_PER_MILLIMETER_Y/v.y/2; 
-  float cmtx = 1/((fx * STEPS_PER_MILLIMETER_X)/60*2);
-  float cmty = 1/(fy * STEPS_PER_MILLIMETER_Y/60*2);
-  // count
-  float countx = cmtx*16000000/this->prescaler;
-  // float countx = 65536 - 0.008077544*16000000/256; 
-  float county = cmty*16000000/this->prescaler;
-  float roundcountx = ceil(countx);
-  float roundcounty = ceil(county);
-  // Serial.println("cmtx");
-  // Serial.println(cmtx,6);
-  // Serial.println("cmty");
-  // Serial.println(cmty,6);
-  // Serial.println("fx");
-  // Serial.println(fx);
-  // Serial.println("Pulse insgesamt");
-  // Serial.println(STEPS_PER_MILLIMETER_X * v.x*2);
-  
-  // Pulsdifferenz
-  float pdiffx = roundcountx - countx;
-  float pdiffy = roundcounty - county;
-  // Pulse insgesamt 
-  unsigned long pix = STEPS_PER_MILLIMETER_X * v.x;
-  unsigned long piy = STEPS_PER_MILLIMETER_Y * v.y;
-  // Pulsfehler
-  float pfx = pix*pdiffx;
-  float pfy = piy*pdiffy;
-
-  OCR4A = roundcountx; 
-  OCR3A = roundcounty;
-  // OCR3A = 30000; 
-  // OCR4A = 30000;
-  // Serial.println("roundcountx");
-  // Serial.println(roundcountx,6);
-  // Serial.println("roundcounty");
-  // Serial.println(roundcounty,6);
-  //Korrektur
-  // unsigned long korrekturx = pix + pfx;
-  // unsigned long korrektury = piy + pfx;
-  unsigned long korrekturx = STEPS_PER_MILLIMETER_X * v.x * 2 *(roundcountx-countx);
-  unsigned long korrektury = STEPS_PER_MILLIMETER_Y * v.y * 2 *(roundcounty-county);
   // Set Steps
-  if(v.x < 0)
+  if (v.x < 0)
   {
     this->setDirectionMotorX("rechts");
-    // pulses_x = korrekturx + v.x*STEPS_PER_MILLIMETER_X*2;
-    pulses_x =STEPS_PER_MILLIMETER_X * v.x*2; 
-  }else{
+    pulses_x = STEPS_PER_MILLIMETER_X * v.x * 2;
+  }
+  else
+  {
     this->setDirectionMotorX("links");
-    // pulses_x = korrekturx+ v.x*STEPS_PER_MILLIMETER_X*2;
-    pulses_x =STEPS_PER_MILLIMETER_X * v.x * 2; 
+    pulses_x = STEPS_PER_MILLIMETER_X * v.x * 2;
   }
 
-  if(v.y < 0)
+  if (v.y < 0)
   {
     this->setDirectionMotorY("rechts");
-    // pulses_y = korrektury+ v.y*STEPS_PER_MILLIMETER_Y*2;
-    pulses_y =STEPS_PER_MILLIMETER_Y * v.y * 2; 
-  }else{
+    pulses_y = STEPS_PER_MILLIMETER_Y * v.y * 2;
+  }
+  else
+  {
     this->setDirectionMotorY("links");
-    // pulses_y = korrektury+ v.y*STEPS_PER_MILLIMETER_Y*2;
-    pulses_y =STEPS_PER_MILLIMETER_Y * v.y * 2; 
+    pulses_y = STEPS_PER_MILLIMETER_Y * v.y * 2;
   }
 
   lastpoint.x = thispoint.x;
   lastpoint.y = thispoint.y;
 
-  this->startTimer3();
-  this->startTimer4();
+  this->startTimer3(64);
+  this->startTimer4(64);
 }
 
 void Marvin_Steppers::step(int steps_to_move_x, int steps_to_move_y)
@@ -327,9 +294,35 @@ void Marvin_Steppers::stopTimer3(){
 }
 
 
-void Marvin_Steppers::startTimer3(){
+void Marvin_Steppers::startTimer3(unsigned long prescaler){
   // Start Timer 
-    TCCR3B |= (1 << CS32); // Prescaler 256
+    // TCCR3B |= (1 << CS32); // Prescaler 256
+    
+    switch (prescaler)
+    {
+    case 1:
+      TCCR3B |= (1 << CS30); // Prescaler 1
+      break;
+
+    case 8:
+      TCCR3B |= (1 << CS31); // Prescaler 8
+      break;
+
+    case 64:
+      TCCR3B |= ((1 << CS30) | (1 << CS31)); // Prescaler 64
+      break;
+
+    case 256:
+      TCCR3B |= (1 << CS32); // Prescaler 256
+      break;
+
+    case 1024:
+      TCCR3B |= ((1 << CS31) | (1 << CS32)); // Prescaler 1024
+      break;
+
+    default:
+      break;
+    }
 }
 
 void Marvin_Steppers::stopTimer4(){
@@ -338,9 +331,35 @@ void Marvin_Steppers::stopTimer4(){
 }
 
 
-void Marvin_Steppers::startTimer4(){
+void Marvin_Steppers::startTimer4(unsigned long prescaler){
   // Start Timer 
-    TCCR4B |= (1 << CS42); // Prescaler 256
+    // TCCR4B |= (1 << CS42); // Prescaler 256
+    switch (prescaler)
+    {
+    case 1:
+      TCCR4B |= (1 << CS40); // Prescaler 1
+      break;
+
+    case 8:
+      TCCR4B |= (1 << CS41); // Prescaler 8
+      break;
+
+    case 64:
+      TCCR4B |= ((1 << CS40) | (1 << CS41)); // Prescaler 64
+      break;
+
+    case 256:
+      TCCR4B |= (1 << CS42); // Prescaler 256
+      break;
+
+    case 1024:
+      TCCR4B |= ((1 << CS41) | (1 << CS42)); // Prescaler 1024
+      break;
+
+    default:
+      break;
+    }
+
 }
 
 void Marvin_Steppers::setDirectionMotorX(char* str)

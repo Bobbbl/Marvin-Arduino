@@ -113,9 +113,9 @@ public:
   uint8_t y_flag;
   uint16_t prescaler;
   int number_of_steps_x, number_of_steps_y; // total number of steps per revolution
-  void startTimer3();
+  void startTimer3(unsigned long prescaler);
   void stopTimer3();
-  void startTimer4();
+  void startTimer4(unsigned long prescaler);
   void stopTimer4();
   void setDirectionMotorX(char *str);
   void setDirectionMotorY(char *str);
