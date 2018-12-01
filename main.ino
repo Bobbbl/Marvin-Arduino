@@ -3,7 +3,8 @@
 #include "Marvin_Communication.h"
 #include "Marvin_Motor.h"
 
-
+extern volatile int shortpin, longpin;
+extern volatile unsigned long bcount, bcounti = 0;
 extern uint8_t endschalter_flag_x;
 extern uint8_t endschalter_flag_y;
 extern volatile uint16_t steps_x, steps_y;
@@ -16,37 +17,49 @@ uint8_t endschalter_flag_x = 0, endschalter_flag_y = 0;
 Marvin_Steppers stepper_motors(PWM1, PWM2, DIR1, DIR2);
 
 // This is Motor X
+// ISR(TIMER3_COMPA_vect)
+// {
+//   pulses_x--;
+//   if(pulses_x <= 0)
+//   {
+//     // Stop Timer 3
+//     stepper_motors.stopTimer3();
+//     stepper_motors.stopTimer4();
+//     pulses_x = 0;
+//   }
+//   if(pulses_x > 0)
+//   {
+//   digitalWrite(PWM1, !digitalRead(PWM1));
+//   TCNT3 = 0;
+//   }
+//   TCNT3 = 0;
+// }
+
+// ISR(TIMER4_COMPA_vect)
+// {
+//   digitalWrite(PWM2, !digitalRead(PWM2));
+// }
+
 ISR(TIMER3_COMPA_vect)
 {
+  digitalWrite(longpin, HIGH);
+  digitalWrite(longpin, LOW);
+
+  bcounti++;
+  if(bcounti == bcount)
+  {
+    bcounti = 0;
+    digitalWrite(shortpin, HIGH);
+    digitalWrite(shortpin, LOW);
+  }
+  
   pulses_x--;
   if(pulses_x <= 0)
   {
-    // Stop Timer 3
-    stepper_motors.stopTimer3();
     pulses_x = 0;
+    stepper_motors.stopTimer3();
   }
-  if(pulses_x > 0)
-  {
-  digitalWrite(PWM1, !digitalRead(PWM1));
-  }
-  TCNT3 = 0;
-}
 
-// This is Motor Y
-ISR(TIMER4_COMPA_vect)
-{
-  pulses_y--;
-  if(pulses_y <= 0)
-  {
-    // Stop Timer 4
-    stepper_motors.stopTimer4();
-    pulses_y = 0;
-  }
-  if(pulses_y > 0)
-  {
-  digitalWrite(PWM2, !digitalRead(PWM2));
-  }
-  TCNT4 = 0;
 }
 
 void setup(){
@@ -103,7 +116,10 @@ void loop(){
           {
             // Strecke_Steps_RPM s1 = convertToStepsAndRPM(s);
             // stepper_motors.stepPWM(s1);
-            stepper_motors.easyStep(s);
+            // stepper_motors.easyStep(s);
+            // stepper_motors.tt(s);
+            stepper_motors.bresenham(s);
+
             while(steps_x != 0 || steps_y != 0){
             }
             sendPointReached();

@@ -10,13 +10,15 @@
 extern uint8_t endschalter_flag_x;
 extern uint8_t endschalter_flag_y;
 
-#define STEPS_PER_REVOLUTION_X 800
-#define STEPS_PER_REVOLUTION_Y 800
+#define STEPS_PER_REVOLUTION_X 25600
+#define STEPS_PER_REVOLUTION_Y 25600
 #define DISTANCE_PER_REVOLUTION_X 0.5 // Strecke pro Umdrehung in mm
 #define DISTANCE_PER_REVOLUTION_Y 0.5 // Strecke pro Umdrehung in mm
 
-#define STEPS_PER_MILLIMETER_X 800  // Wieviele Schritte ergeben einen Millimeter X
-#define STEPS_PER_MILLIMETER_Y 800  // Vieviele Schritte ergeben einen Millimeter Y
+#define STEPS_PER_MILLIMETER_X (float)51200.00  // Wieviele Schritte ergeben einen Millimeter X
+#define STEPS_PER_MILLIMETER_Y (float)51200.00  // Vieviele Schritte ergeben einen Millimeter Y
+
+#define CPU_FREQ (unsigned long)16000000
 
 typedef enum {
     links = 0,
@@ -71,13 +73,17 @@ public:
     TCCR3A = 0;
     TCCR3B = 0;
     TCNT3 = 0;
+    TCCR3A = 0;
+    TCCR3B = 0;
+    TCCR4A = 0;
+    TCCR4B = 0;
     // Waveform Generation Mode
     TCCR3A |= (1 << WGM32); // CTC Mode
     // Compare Output Mode
-    TCCR3A |= (1 << COM3A0);  // Toggle OC3A (PE3) bzw. PWM 6 on Compare Match
-    TCCR3A &= ~(1 << COM3A1); // Toggle OC3A (PE3) bzw. PWM 6 on Compare Match
+    // TCCR3A |= (1 << COM3A0);  // Toggle OC3A (PE3) bzw. PWM 6 on Compare Match
+    // TCCR3A &= ~(1 << COM3A1); // Toggle OC3A (PE3) bzw. PWM 6 on Compare Match
     // Prescaler
-    this->prescaler = 256;
+    this->prescaler = 64;
     // TCCR3B |= (1 << CS31); // Prescaler 8
     // Interrupts
     TIMSK3 |= (1 << OCIE3A); // Output Compare Interrupt Enabled
@@ -89,10 +95,10 @@ public:
     // Waveform Generation Mode
     TCCR4A |= (1 << WGM42); // CTC Mode
     // Compare Output Mode
-    TCCR4A |= (1 << COM4A0);  // Toggle OC3A (PE3) bzw. PWM 6 on Compare Match
-    TCCR4A &= ~(1 << COM4A1); // Toggle OC3A (PE3) bzw. PWM 6 on Compare Match
+    // TCCR4A |= (1 << COM4A0);  // Toggle OC3A (PE3) bzw. PWM 6 on Compare Match
+    // TCCR4A &= ~(1 << COM4A1); // Toggle OC3A (PE3) bzw. PWM 6 on Compare Match
     // Prescaler
-    this->prescaler = 256;
+    this->prescaler = 64;
      //TCCR4B |= (1 << CS41); // Prescaler 8
     // Interrupts
     TIMSK4 |= (1 << OCIE4A); // Output Compare Interrupt Enabled
@@ -119,7 +125,8 @@ public:
   void stopTimer4();
   void setDirectionMotorX(char *str);
   void setDirectionMotorY(char *str);
-
+void bresenham(Strecke s);
+void tt(Strecke s);
   int version();
 
 private:
