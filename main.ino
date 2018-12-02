@@ -4,7 +4,7 @@
 #include "Marvin_Motor.h"
 
 extern volatile int shortpin, longpin;
-extern volatile unsigned long bcount, bcounti = 0;
+extern volatile float bcount, bcounti = 0;
 extern uint8_t endschalter_flag_x;
 extern uint8_t endschalter_flag_y;
 extern volatile uint16_t steps_x, steps_y;
@@ -46,7 +46,7 @@ ISR(TIMER3_COMPA_vect)
   digitalWrite(longpin, LOW);
 
   bcounti++;
-  if(bcounti == bcount)
+  if(bcounti >= bcount)
   {
     bcounti = 0;
     digitalWrite(shortpin, HIGH);

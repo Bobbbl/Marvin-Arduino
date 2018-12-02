@@ -15,8 +15,8 @@ extern uint8_t endschalter_flag_y;
 #define DISTANCE_PER_REVOLUTION_X 0.5 // Strecke pro Umdrehung in mm
 #define DISTANCE_PER_REVOLUTION_Y 0.5 // Strecke pro Umdrehung in mm
 
-#define STEPS_PER_MILLIMETER_X (float)51200.00  // Wieviele Schritte ergeben einen Millimeter X
-#define STEPS_PER_MILLIMETER_Y (float)51200.00  // Vieviele Schritte ergeben einen Millimeter Y
+#define STEPS_PER_MILLIMETER_X (float)400.00  // Wieviele Schritte ergeben einen Millimeter X
+#define STEPS_PER_MILLIMETER_Y (float)400.00  // Vieviele Schritte ergeben einen Millimeter Y
 
 #define CPU_FREQ (unsigned long)16000000
 

@@ -1,6 +1,7 @@
 #include "Marvin_Motor.h"
 
-volatile unsigned long bcount = 0;
+volatile int longpin, shortpin;
+volatile float bcount = 0;
 volatile uint16_t steps_x = 0, steps_y = 0;
 volatile unsigned long pulses_x = 0, pulses_y = 0;
 
@@ -239,11 +240,15 @@ void Marvin_Steppers::bresenham(Strecke s)
   {
     longline = round(stepsx);
     shortline = round(stepsy);
+    longpin = PWM1;
+    shortpin = PWM2;
   }
   else
   {
     longline = round(stepsy);
     shortline = round(stepsx);
+    longpin = PWM2;
+    shortpin = PWM1;
   }
 
   bcount = round(longline / shortline);
@@ -264,8 +269,10 @@ void Marvin_Steppers::bresenham(Strecke s)
 
   // Den Compare - Wert setzen
   OCR4A = rcount;
+  Serial.println(rcount);
 
   pulses_x = longline;
+  pulses_y = shortline;
 
 
   // Timer starten
