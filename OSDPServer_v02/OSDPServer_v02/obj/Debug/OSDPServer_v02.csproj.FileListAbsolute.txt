@@ -1,0 +1,10 @@
+C:\Users\draxinger\Documents\Projects\OSDPServer_v02\OSDPServer_v02\bin\Debug\OSDPServer_v02.exe.config
+C:\Users\draxinger\Documents\Projects\OSDPServer_v02\OSDPServer_v02\bin\Debug\OSDPServer_v02.exe
+C:\Users\draxinger\Documents\Projects\OSDPServer_v02\OSDPServer_v02\bin\Debug\OSDPServer_v02.pdb
+C:\Users\draxinger\Documents\Projects\OSDPServer_v02\OSDPServer_v02\obj\Debug\OSDPServer_v02.csprojAssemblyReference.cache
+C:\Users\draxinger\Documents\Projects\OSDPServer_v02\OSDPServer_v02\obj\Debug\OSDPServer_v02.Form1.resources
+C:\Users\draxinger\Documents\Projects\OSDPServer_v02\OSDPServer_v02\obj\Debug\OSDPServer_v02.Properties.Resources.resources
+C:\Users\draxinger\Documents\Projects\OSDPServer_v02\OSDPServer_v02\obj\Debug\OSDPServer_v02.csproj.GenerateResource.cache
+C:\Users\draxinger\Documents\Projects\OSDPServer_v02\OSDPServer_v02\obj\Debug\OSDPServer_v02.csproj.CoreCompileInputs.cache
+C:\Users\draxinger\Documents\Projects\OSDPServer_v02\OSDPServer_v02\obj\Debug\OSDPServer_v02.exe
+C:\Users\draxinger\Documents\Projects\OSDPServer_v02\OSDPServer_v02\obj\Debug\OSDPServer_v02.pdb

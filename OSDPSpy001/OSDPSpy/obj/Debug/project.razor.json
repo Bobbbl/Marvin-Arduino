@@ -1,0 +1,14 @@
+{
+  "ProjectFilePath": "c:\\Users\\draxinger\\Documents\\OSDPSpy001\\OSDPSpy\\OSDPSpy.csproj",
+  "TargetFramework": "v4.5",
+  "TagHelpers": [],
+  "Configuration": {
+    "ConfigurationName": "UnsupportedRazor",
+    "LanguageVersion": "1.0",
+    "Extensions": [
+      {
+        "ExtensionName": "UnsupportedRazorExtension"
+      }
+    ]
+  }
+}
