@@ -1,1 +1,0 @@
-osdpspy COM9 19200
