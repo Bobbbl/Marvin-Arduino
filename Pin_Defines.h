@@ -7,6 +7,7 @@
 #define PWM1 5
 #define PWM2 6
 #define PWM3 13
+#define PWM_PressurePump
 #define DIR1 24
 #define DIR2 23
 #define END1 4
@@ -21,6 +22,8 @@
 
 #define IN1 50
 #define IN2 51
+#define IN3 52
+#define IN4 53
 
 
 #endif

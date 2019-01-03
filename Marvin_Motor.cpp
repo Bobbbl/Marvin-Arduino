@@ -621,13 +621,13 @@ void Spindel::startMotor(Richtung richtung, uint8_t speed)
   if(getRichtung() != keine) // Der Motor muss offensichtlich noch laufen
   {
     // Das heißt, dass die Richtung nicht geändert werden darf
-    analogWrite(PWM3, speed);
+    analogWrite(PWM3, percent);
     return;
   }
   else
   {
     setRichtung(richtung);
-    analogWrite(PWM3, speed);
+    analogWrite(PWM3, percent);
   }
 
 }
