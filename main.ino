@@ -16,30 +16,6 @@ uint8_t endschalter_flag_x = 0, endschalter_flag_y = 0;
 
 Marvin_Steppers stepper_motors(PWM1, PWM2, DIR1, DIR2);
 
-// This is Motor X
-// ISR(TIMER3_COMPA_vect)
-// {
-//   pulses_x--;
-//   if(pulses_x <= 0)
-//   {
-//     // Stop Timer 3
-//     stepper_motors.stopTimer3();
-//     stepper_motors.stopTimer4();
-//     pulses_x = 0;
-//   }
-//   if(pulses_x > 0)
-//   {
-//   digitalWrite(PWM1, !digitalRead(PWM1));
-//   TCNT3 = 0;
-//   }
-//   TCNT3 = 0;
-// }
-
-// ISR(TIMER4_COMPA_vect)
-// {
-//   digitalWrite(PWM2, !digitalRead(PWM2));
-// }
-
 ISR(TIMER3_COMPA_vect)
 {
   digitalWrite(longpin, HIGH);

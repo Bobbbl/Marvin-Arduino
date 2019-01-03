@@ -6,6 +6,7 @@
 
 #define PWM1 5
 #define PWM2 6
+#define PWM3 13
 #define DIR1 24
 #define DIR2 23
 #define END1 4
@@ -17,6 +18,9 @@
 #define MOSI 51
 #define MISO 50 
 #define CLK 52
+
+#define IN1 50
+#define IN2 51
 
 
 #endif

@@ -274,13 +274,13 @@ void Marvin_Steppers::bresenham(Strecke s)
   pulses_x = longline;
   pulses_y = shortline;
 
-
   // Timer starten
   this->startTimer3(this->prescaler);
 }
 
-void Marvin_Steppers::tt(Strecke s){
-  
+void Marvin_Steppers::tt(Strecke s)
+{
+
   this->prescaler = 256;
 
   static Point lastpoint = {.x = 0, .y = 0};
@@ -306,18 +306,16 @@ void Marvin_Steppers::tt(Strecke s){
   // Zeit pro Schritt
   float stx = t / pulsesx;
   float sty = t / pulsesy;
-  
+
   // Frequenzen
-  float hzx = 1/stx;
-  float hzy = 1/sty; 
+  float hzx = 1 / stx;
+  float hzy = 1 / sty;
   OCR3A = 65000;
 
   // Zeit in ms
   t = t * 1000;
-this->startTimer3(256);
-
+  this->startTimer3(256);
 }
-
 
 void Marvin_Steppers::step(int steps_to_move_x, int steps_to_move_y)
 {
@@ -415,16 +413,16 @@ void Marvin_Steppers::stopTimer3()
 void Marvin_Steppers::startTimer3(unsigned long prescaler)
 {
   // Start Timer
-    TCCR3A |= (1 << WGM32); // CTC Mode
-    DDRE |= (1<<3);
-    // Compare Output Mode
-    TCCR3A |= (1 << COM3A0);  // Toggle OC3A (PE3) bzw. PWM 6 on Compare Match
-    TCCR3A &= ~(1 << COM3A1); // Toggle OC3A (PE3) bzw. PWM 6 on Compare Match
-    // Prescaler
-    this->prescaler = prescaler;
-    // TCCR3B |= (1 << CS31); // Prescaler 8
-    // Interrupts
-    TIMSK3 |= (1 << OCIE3A); // Output Compare Interrupt Enabled
+  TCCR3A |= (1 << WGM32); // CTC Mode
+  DDRE |= (1 << 3);
+  // Compare Output Mode
+  TCCR3A |= (1 << COM3A0);  // Toggle OC3A (PE3) bzw. PWM 6 on Compare Match
+  TCCR3A &= ~(1 << COM3A1); // Toggle OC3A (PE3) bzw. PWM 6 on Compare Match
+  // Prescaler
+  this->prescaler = prescaler;
+  // TCCR3B |= (1 << CS31); // Prescaler 8
+  // Interrupts
+  TIMSK3 |= (1 << OCIE3A); // Output Compare Interrupt Enabled
   // TCCR3B |= (1 << CS32); // Prescaler 256
 
   switch (prescaler)
@@ -457,7 +455,6 @@ void Marvin_Steppers::startTimer3(unsigned long prescaler)
   default:
     break;
   }
-
 }
 
 void Marvin_Steppers::stopTimer4()
@@ -572,4 +569,63 @@ Strecke_Steps_RPM convertToStepsAndRPM(Strecke s)
   last_point.y = this_point.y;
 
   return ssp;
+}
+
+void Spindel::setRichtung(Richtung richtung)
+{
+  if(richtung == links)
+  {
+    digitalWrite(IN1, LOW);
+    digitalWrite(IN2, HIGH);
+  }
+  else if(richtung == rechts)
+  {
+    digitalWrite(IN1, HIGH);
+    digitalWrite(IN2, LOW);
+  }
+  else if(richtung == keine)
+  {
+    analogWrite(PWM3, 0);
+    digitalWrite(IN1, LOW);
+    digitalWrite(IN2, LOW);
+  }
+
+  direction = richtung;
+}
+Richtung Spindel::getRichtung()
+{
+  return direction;
+}
+
+/*
+Changes the speed of the motor IF motor is already running
+if the motor is already stopped, the motor returns -1
+speed is in percent [0..10]
+*/
+int Spindel::changeSpeed(uint8_t speed)
+
+/*
+Set speed in percent 
+Richtung über das Enum "Richtung"
+*/
+void Spindel::startMotor(Richtung richtung, uint8_t speed)
+{
+  uint8_t percent = (uint8_t)((speed/100)+1) * 255;
+  if(getRichtung() != keine) // Der Motor muss offensichtlich noch laufen
+  {
+    // Das heißt, dass die Richtung nicht geändert werden darf
+    analogWrite(PWM3, speed);
+    return;
+  }
+  else
+  {
+    setRichtung(richtung);
+    analogWrite(PWM3, speed);
+  }
+
+}
+
+{
+  setRichtung(keine);
+
 }
