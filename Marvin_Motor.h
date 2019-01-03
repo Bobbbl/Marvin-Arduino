@@ -70,7 +70,8 @@ public:
     pinMode(PWM3, OUTPUT);
     pinMode(IN1, OUTPUT);
     pinMode(IN2, OUTPUT);
-    // Al Pins to Low
+
+    // All Pins to Low
     digitalWrite(IN1, LOW);
     digitalWrite(IN2, LOW);
     analogWrite(PWM3, 0);
@@ -78,6 +79,8 @@ public:
 
   void setRichtung(Richtung);
   void getRichtung(Richtung);
+  void startMotor(Richtung richtung, uint8_t speed);
+  void stopMotor();
 
 private:
   Richtung direction = keine;

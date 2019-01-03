@@ -604,6 +604,13 @@ speed is in percent [0..10]
 */
 int Spindel::changeSpeed(uint8_t speed)
 
+
+void stopMotor()
+{
+  analogWrite(PWM3, 0);
+  setRichtung(keine);
+}
+
 /*
 Set speed in percent 
 Richtung über das Enum "Richtung"
