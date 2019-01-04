@@ -88,6 +88,54 @@ inline void sendEndSession()
     Serial.println(comm_dict[End_Session]);
 }
 
+String getValue(String data, char separator, int index)
+{
+  int found = 0;
+  int strIndex[] = {0, -1};
+  int maxIndex = data.length()-1;
+
+  for(int i=0; i<=maxIndex && found<=index; i++){
+    if(data.charAt(i)==separator || i==maxIndex){
+        found++;
+        strIndex[0] = strIndex[1]+1;
+        strIndex[1] = (i == maxIndex) ? i+1 : i;
+    }
+  }
+
+  return found>index ? data.substring(strIndex[0], strIndex[1]) : "";
+}
+
+StringArray getValueInArray(String data, char separator)
+{
+  int found = 0;
+  int strIndex[] = {0, -1};
+  int maxIndex = data.length()-1;
+  struct StringArray strarray;
+
+  for(int i=0; i<=maxIndex && found<=index; i++){
+    if(data.charAt(i)==separator || i==maxIndex){
+        found++;
+    }
+  }
+  strarray.count = found;
+  found = 0;
+  
+  for(int i=0; i<=maxIndex; i++){
+    if(data.charAt(i)==separator || i==maxIndex){
+        found++;
+        strIndex[0] = strIndex[1]+1;
+        strIndex[1] = (i == maxIndex) ? i+1 : i;
+        strarray.str_array[i] = data.substring(strIndex[0], strIndex[1]);
+    }
+  }
+
+  for(int i=0; i<10; i++)
+  {
+      strarray.str_array[i].trim();
+  }
+
+  return strarray;
+}
 
 Strecke readToolPathLine()
 {
@@ -121,10 +169,11 @@ Strecke readToolPathLine()
     // if one of them is missing, there must be
     // an error - so, cancel session and reset
     // communication
-    uint8_t pos_X, pos_Y, pos_F;
+    uint8_t pos_X, pos_Y, pos_F, pos_S, pos_RS, pos_P;
     pos_X = line.indexOf('X');
     pos_Y = line.indexOf('Y');
     pos_F = line.indexOf('F');
+
     if (pos_Y == 0 || pos_F == 0)
     {
         // There must be an error
@@ -136,6 +185,7 @@ Strecke readToolPathLine()
     xstr = line.substring(pos_X, pos_Y);
     ystr = line.substring(pos_Y, pos_F);
     fstr = line.substring(pos_F);
+
     // Now remove all leadig and trailing whitespaces
     xstr.trim();
     ystr.trim();

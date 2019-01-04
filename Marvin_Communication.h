@@ -44,10 +44,18 @@ communication_alphabet waitForKonsekutiveMessage();
 Strecke readToolPathLine();
 Strecke receiveKoordinate();
 Strecke receivePoint();
+String getValue(String data, char separator, int index);
 
 // Communication shortcuts
 inline void sendNACK();
 inline void sendEndSession();
 inline void sendError();
 inline void sendReceiveSuccessfull();
+
+struct StringArray{
+    int count = 0;
+    String str_array[10];
+}
+
+
 #endif
