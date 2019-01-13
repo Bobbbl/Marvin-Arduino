@@ -61,13 +61,14 @@ void loop()
     String m = Serial.readString();
     String  xMessage, yMessage, 
             sMessage, pMessage;
+    struct StringArray strarr = getValueInArray(xMessage, ' ');
+    c = GetCommunicationEnum(m);
     
     switch (c)
     {
       case X:
- //     xMessage = Serial.readString();
- //     StringArray = getValueInArray(xMessage, ' ');
-
+      xMessage = Serial.readString();
+      
 
         break;
     

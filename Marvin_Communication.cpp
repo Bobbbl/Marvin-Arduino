@@ -118,7 +118,32 @@ String getValue(String data, char separator, int index)
     return found > index ? data.substring(strIndex[0], strIndex[1]) : "";
 }
 
-StringArray getValueInArray(String data, char separator)
+enum commEnum GetCommunicationEnum(String str){
+    enum commEnum c;
+
+    if(str == "X")
+    {
+        return X;
+    }
+    else if(str == "Y")
+    {
+        return Y;
+    }
+    else if(str == "P")
+    {
+        return P;
+    }
+    else if(str == "S")
+    {
+        return S;
+    }
+    else
+    {
+        NO_VALID_MESSAGE;
+    }
+}
+
+struct StringArray getValueInArray(String data, char separator)
 {
     int found = 0;
     int strIndex[] = {0, -1};
