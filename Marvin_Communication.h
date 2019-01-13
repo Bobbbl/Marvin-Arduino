@@ -11,6 +11,8 @@
 
 using namespace std;
 
+typedef enum commEnum {X, Y, S, P, Wait};
+
 typedef enum {Start_Session = 0, 
 End_Session = 1,
 Start_Homing = 2,
@@ -44,6 +46,7 @@ void SanchezsendError();
 void sendReceiveSuccessfull();
 void sendPointReached();
 
+// Capsulate up to 10 Strings in this Struct
 struct StringArray{
     int count = 0;
     String str_array[10];

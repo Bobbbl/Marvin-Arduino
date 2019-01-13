@@ -52,74 +52,40 @@ void setup(){
 
 }
 
-void loop(){
-  // Enter Starting State
-  // Check Connection to PC and if Interface Program
-  // is started
-  uint8_t connection_check = checkConnection();
-  Strecke s;
-  // Wait until Connection is confirmed
-  while (connection_check != 1)
-  {
-    connection_check = checkConnection();
-  }
-  // Enter Working State
-  while (true)
-  {
-    // Wait for Messages
-    communication_alphabet message;
-    message = No_Message;
-    message = waitForSession();
-    // Übertragung gestartet
-    if (message == Start_Session)
+void loop()
+{
+  // Wait for new Message
+
+  while(checkConnection > 0){
+    enum commEnum c = Wait;
+    String m = Serial.readString();
+    String  xMessage, yMessage, 
+            sMessage, pMessage;
+    
+    switch (c)
     {
-      message = waitForKonsekutiveMessage();
-      switch (message)
-      {
-      case End_Session:
-        // Just end and leeave the if statement
-        break;
+      case X:
+ //     xMessage = Serial.readString();
+ //     StringArray = getValueInArray(xMessage, ' ');
 
-      case Send_Toolpath:
-        // Wait for Message
-        while(1){
-          // Receive new Point - Function handles all Communication
-          s = receivePoint();
-
-          // drive Motor
-          if (s.error == 0 && s.end_session == 0)
-          {
-            // Strecke_Steps_RPM s1 = convertToStepsAndRPM(s);
-            // stepper_motors.stepPWM(s1);
-            // stepper_motors.easyStep(s);
-            // stepper_motors.tt(s);
-            stepper_motors.bresenham(s);
-
-            while(steps_x != 0 || steps_y != 0){
-            }
-            sendPointReached();
-          }
-          // In other case leave while loop
-          else
-          {
-            break;
-          }
-        }
 
         break;
-
-      case Start_Homing:
-        // Do Homing
-        Serial.println("Homing");
-        stepper_motors.doHoming();
-        // Homing done
-        sendEndSession();
+    
+      case Y:
         break;
-
+    
+      case S:
+        break;
+    
+      case P:
+        break;
+    
       default:
-        sendEndSession();
         break;
-      }
     }
   }
+  
+
+  // Switch Case Which Message Was Received
+
 }
