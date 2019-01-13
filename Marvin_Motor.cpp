@@ -1,4 +1,5 @@
 #include "Marvin_Motor.h"
+#include <Arduino.h>
 
 volatile int longpin, shortpin;
 volatile float bcount = 0;
@@ -600,12 +601,16 @@ Richtung Spindel::getRichtung()
 /*
 Changes the speed of the motor IF motor is already running
 if the motor is already stopped, the motor returns -1
-speed is in percent [0..10]
+speed is in percent [0..100]
 */
 int Spindel::changeSpeed(uint8_t speed)
+{
+  uint8_t percent = (uint8_t)((speed/100)+1) * 255;
+  analogWrite(PWM3, percent);
+}
 
 
-void stopMotor()
+void Spindel::stopMotor()
 {
   analogWrite(PWM3, 0);
   setRichtung(keine);
@@ -629,10 +634,5 @@ void Spindel::startMotor(Richtung richtung, uint8_t speed)
     setRichtung(richtung);
     analogWrite(PWM3, percent);
   }
-
-}
-
-{
-  setRichtung(keine);
 
 }

@@ -1,27 +1,38 @@
 #include "Marvin_Communication.h"
-
+#include "Arduino.h"
 #define DEBUG
 
-uint8_t checkConnection(){
+String Sanchezcomm_dict[COMM_LENGTH] = {
+    "__Start_Session__",
+    "__End_Session__",
+    "__Start_Homing__",
+    "__Send_Toolpath__",
+    "__Empfang_Besteatigt__",
+    "__Receive_Error__",
+    "__Receive_Successfull__",
+    "__Point_Reached__"
+};
+
+uint8_t checkConnection()
+{
     return Serial.available();
 }
 
-
-
- communication_alphabet checkForValidMessage(){
-    // Wait for Message available in Buffer 
+communication_alphabet checkForValidMessage()
+{
+    // Wait for Message available in Buffer
     // Wenn keine Message gelesen werden kann, dann
     // dann wird einfach ein "No Message" zurückgegeben
-    for(int j = 0; j<=2;j++)
+    for (int j = 0; j <= 2; j++)
     {
-        if(Serial.available() != 0)
+        if (Serial.available() != 0)
         {
             break;
         }
 
         delay(100);
 
-        if(Serial.available() != 0)
+        if (Serial.available() != 0)
         {
             break;
         }
@@ -31,19 +42,19 @@ uint8_t checkConnection(){
     // will be no Problem
     String m = Serial.readString();
     // Check if Message is Part of registered Messages
-    for(int i = 0; i<=COMM_LENGTH-1; i++){
-        if(m == comm_dict[i])
+    for (int i = 0; i <= COMM_LENGTH - 1; i++)
+    {
+        if (m == Sanchezcomm_dict[i])
         {
             return (communication_alphabet)i;
         }
     }
-    
+
     return No_Message;
 }
 
-
-
-communication_alphabet waitForSession(){
+communication_alphabet waitForSession()
+{
     communication_alphabet message = No_Message;
     do
     {
@@ -56,13 +67,14 @@ communication_alphabet waitForSession(){
     } while (message == No_Message);
 }
 
-
-communication_alphabet waitForKonsekutiveMessage(){
+communication_alphabet waitForKonsekutiveMessage()
+{
     communication_alphabet message = No_Message;
     unsigned long first = millis(); // Saves Time of First Entering Function for Timeout Function
     unsigned long now = millis();   // Variable for This Loop Time
     // Enter Waiting Loop
-    while (message == No_Message){
+    while (message == No_Message)
+    {
         now = millis();
         message = checkForValidMessage();
         // Check For Timeout
@@ -77,64 +89,69 @@ communication_alphabet waitForKonsekutiveMessage(){
     return message;
 }
 
-
-inline void sendNack(){
-    Serial.println(comm_dict[Empfang_Bestaetigt]);
+void sendNack()
+{
+    Serial.println(Sanchezcomm_dict[Empfang_Bestaetigt]);
 }
 
-
-inline void sendEndSession()
+void sendEndSession()
 {
-    Serial.println(comm_dict[End_Session]);
+    Serial.println(Sanchezcomm_dict[End_Session]);
 }
 
 String getValue(String data, char separator, int index)
 {
-  int found = 0;
-  int strIndex[] = {0, -1};
-  int maxIndex = data.length()-1;
+    int found = 0;
+    int strIndex[] = {0, -1};
+    int maxIndex = data.length() - 1;
 
-  for(int i=0; i<=maxIndex && found<=index; i++){
-    if(data.charAt(i)==separator || i==maxIndex){
-        found++;
-        strIndex[0] = strIndex[1]+1;
-        strIndex[1] = (i == maxIndex) ? i+1 : i;
+    for (int i = 0; i <= maxIndex && found <= index; i++)
+    {
+        if (data.charAt(i) == separator || i == maxIndex)
+        {
+            found++;
+            strIndex[0] = strIndex[1] + 1;
+            strIndex[1] = (i == maxIndex) ? i + 1 : i;
+        }
     }
-  }
 
-  return found>index ? data.substring(strIndex[0], strIndex[1]) : "";
+    return found > index ? data.substring(strIndex[0], strIndex[1]) : "";
 }
 
 StringArray getValueInArray(String data, char separator)
 {
-  int found = 0;
-  int strIndex[] = {0, -1};
-  int maxIndex = data.length()-1;
-  struct StringArray strarray;
+    int found = 0;
+    int strIndex[] = {0, -1};
+    int maxIndex = data.length() - 1;
+    struct StringArray strarray;
 
-  for(int i=0; i<=maxIndex && found<=index; i++){
-    if(data.charAt(i)==separator || i==maxIndex){
-        found++;
+    for (int i = 0; i <= maxIndex; i++)
+    {
+        if (data.charAt(i) == separator || i == maxIndex)
+        {
+            found++;
+        }
     }
-  }
-  strarray.count = found;
-  found = 0;
-  
-  for(int i=0; i<=maxIndex; i++){
-    if(data.charAt(i)==separator || i==maxIndex){
-        found++;
-        strIndex[0] = strIndex[1]+1;
-        strIndex[1] = (i == maxIndex) ? i+1 : i;
-        strarray.str_array[i] = data.substring(strIndex[0], strIndex[1]);
+    strarray.count = found;
+    found = 0;
+
+    for (int i = 0; i <= maxIndex; i++)
+    {
+        if (data.charAt(i) == separator || i == maxIndex)
+        {
+            found++;
+            strIndex[0] = strIndex[1] + 1;
+            strIndex[1] = (i == maxIndex) ? i + 1 : i;
+            strarray.str_array[i] = data.substring(strIndex[0], strIndex[1]);
+        }
     }
-  }
 
-  for(int i=0; i<10; i++)
-  {
-      strarray.str_array[i].trim();
-  }
+    for (int i = 0; i < 10; i++)
+    {
+        strarray.str_array[i].trim();
+    }
 
-  return strarray;
+    return strarray;
 }
 
 Strecke readToolPathLine()
@@ -148,9 +165,9 @@ Strecke readToolPathLine()
     communication_alphabet message = No_Message;
     // Check if Line is Communication Alphabet Message (like End_Session)
     // which would mean, that transmission would be over
-    for (int i = 0; i <= COMM_LENGTH-1; i++)
+    for (int i = 0; i <= COMM_LENGTH - 1; i++)
     {
-        if (line == comm_dict[i])
+        if (line == Sanchezcomm_dict[i])
         {
             message = (communication_alphabet)i;
         }
@@ -204,11 +221,11 @@ Strecke readToolPathLine()
     return r;
 }
 
-
 // Returns -1 for line error
 //          0 for no error and no end_session
 //          1 for end message
-Strecke receiveKoordinate(){
+Strecke receiveKoordinate()
+{
     Strecke s = {.x = 0, .y = 0, .f = 0, .error = 1, .end_session = 0};
     unsigned long now = millis();
     do
@@ -220,21 +237,22 @@ Strecke receiveKoordinate(){
             {
                 return s;
             }
-            else if(s.end_session == 0)
+            else if (s.end_session == 0)
             {
-               return s; 
+                return s;
             }
         }
     } while (millis() - now < MESSAGE_TIMEOUT);
     return s;
 }
 
-Strecke receivePoint(){
+Strecke receivePoint()
+{
     Strecke s = receiveKoordinate();
     // If Error occured, send Error and send End session
     if (s.error == 1)
     {
-        sendError();
+        SanchezsendError();
         sendEndSession();
         return s;
     }
@@ -251,15 +269,17 @@ Strecke receivePoint(){
     }
 }
 
-
-inline void sendError(){
-    Serial.println(comm_dict[Receive_Error]);
+void SanchezsendError()
+{
+    Serial.println(Sanchezcomm_dict[Receive_Error]);
 }
 
-inline void sendReceiveSuccessfull(){
-    Serial.println(comm_dict[Receive_Successfull]);
+void sendReceiveSuccessfull()
+{
+    Serial.println(Sanchezcomm_dict[Receive_Successfull]);
 }
 
-inline void sendPointReached(){
-    Serial.println(comm_dict[Point_Reached]);
+void sendPointReached()
+{
+    Serial.println(Sanchezcomm_dict[Point_Reached]);
 }

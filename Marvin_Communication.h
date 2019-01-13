@@ -1,7 +1,7 @@
 #ifndef MARVIN_COMMUNICATION
 #define MARVIN_COMMUNICATION
 
-#include <Arduino.h>
+#include "Arduino.h"
 #include <string.h>
 #include "Pin_Defines.h"
 #include "Marvin_Motor.h"
@@ -24,16 +24,7 @@ No_Message = -1
 
 #define COMM_LENGTH 8
 
-String comm_dict[COMM_LENGTH]= {
-    "__Start_Session__",
-    "__End_Session__",
-    "__Start_Homing__",
-    "__Send_Toolpath__",
-    "__Empfang_Besteatigt__",
-    "__Receive_Error__",
-    "__Receive_Successfull__",
-    "__Point_Reached__"
-};
+extern String Sanchezcomm_dict[COMM_LENGTH];
 
 
 
@@ -47,15 +38,16 @@ Strecke receivePoint();
 String getValue(String data, char separator, int index);
 
 // Communication shortcuts
-inline void sendNACK();
-inline void sendEndSession();
-inline void sendError();
-inline void sendReceiveSuccessfull();
+void sendNack();
+void sendEndSession();
+void SanchezsendError();
+void sendReceiveSuccessfull();
+void sendPointReached();
 
 struct StringArray{
     int count = 0;
     String str_array[10];
-}
+};
 
 
 #endif

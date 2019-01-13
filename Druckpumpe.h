@@ -1,7 +1,8 @@
 #ifndef Druckpumpe
 #define Druckpumpe
 
-#include <Arduino.h>
+#include "Arduino.h"
+#include "Pin_Defines.h"
 
 class PressurePump
 {
@@ -20,6 +21,6 @@ class PressurePump
     void startMotor(uint8_t speed);
     void stopMotor();
 
-}
+};
 
 #endif

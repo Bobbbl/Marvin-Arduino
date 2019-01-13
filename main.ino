@@ -1,4 +1,3 @@
-#include <Arduino.h>
 #include "Pin_Defines.h"
 #include "Marvin_Communication.h"
 #include "Marvin_Motor.h"

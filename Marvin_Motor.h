@@ -78,15 +78,16 @@ public:
   }
 
   void setRichtung(Richtung);
-  void getRichtung(Richtung);
+  Richtung getRichtung();
   void startMotor(Richtung richtung, uint8_t speed);
   void stopMotor();
+  int changeSpeed(uint8_t speed);
 
 private:
   Richtung direction = keine;
 
 
-}
+};
 
 class Marvin_Steppers
 {
