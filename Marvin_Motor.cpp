@@ -620,7 +620,7 @@ void Spindel::stopMotor()
 Set speed in percent 
 Richtung über das Enum "Richtung"
 */
-void Spindel::startMotor(Richtung richtung, uint8_t speed)
+void Spindel::startMotor(Richtung richtung, int speed)
 {
   uint8_t percent = (uint8_t)((speed/100)+1) * 255;
   if(getRichtung() != keine) // Der Motor muss offensichtlich noch laufen

@@ -1,7 +1,7 @@
 #include "Druckpumpe.h"
 
 
-void PressurePump::startMotor(uint8_t speed)
+void PressurePump::startMotor(int speed)
 {
   uint8_t percent = (uint8_t)((speed/100)+1) * 255;
 

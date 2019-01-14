@@ -1,6 +1,7 @@
 #include "Pin_Defines.h"
 #include "Marvin_Communication.h"
 #include "Marvin_Motor.h"
+#include "Druckpumpe.h"
 
 extern volatile int shortpin, longpin;
 extern volatile float bcount, bcounti = 0;
@@ -14,6 +15,8 @@ const int chipSelect = CS;
 uint8_t endschalter_flag_x = 0, endschalter_flag_y = 0;
 
 Marvin_Steppers stepper_motors(PWM1, PWM2, DIR1, DIR2);
+Spindel spindel;
+PressurePump pump;
 
 ISR(TIMER3_COMPA_vect)
 {
@@ -61,24 +64,30 @@ void loop()
     String m = Serial.readString();
     String  xMessage, yMessage, 
             sMessage, pMessage;
-    struct StringArray strarr = getValueInArray(xMessage, ' ');
     c = GetCommunicationEnum(m);
+    struct StringArray xm;
     
     switch (c)
     {
-      case X:
-      xMessage = Serial.readString();
-      
-
-        break;
-    
-      case Y:
+      case XYF:
+        xm =  getValueInArray(m, ' ');
+        Strecke s;
+        s.x = xm.str_array[1].toFloat();
+        s.y = xm.str_array[2].toFloat();
+        s.f = xm.str_array[3].toFloat();
+        stepper_motors.bresenham(s);
         break;
     
       case S:
+        xm = getValueInArray(m, ' ');
+        int ks = xm.str_array[1].toInt();
+        spindel.startMotor(rechts, ks);
         break;
     
       case P:
+        xm = getValueInArray(m, ' ');
+        int p = xm.str_array[1].toInt();
+        pump.startMotor(p);
         break;
     
       default:

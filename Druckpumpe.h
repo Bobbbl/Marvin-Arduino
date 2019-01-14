@@ -18,7 +18,7 @@ class PressurePump
             analogWrite(PWM_PressurePump, 0);
         }
     
-    void startMotor(uint8_t speed);
+    void startMotor(int speed);
     void stopMotor();
 
 };
