@@ -121,21 +121,21 @@ String getValue(String data, char separator, int index)
 enum commEnum GetCommunicationEnum(String str){
     enum commEnum c;
 
-    if(str.indexOf("XYF") > 0)
+    if(str.indexOf("XYF") >= 0)
     {
         return XYF;
     }
-    else if(str.indexOf("S") > 0)
+    else if(str.indexOf("S") >= 0)
     {
         return S;
     }
-    else if(str.indexOf("P") > 0)
+    else if(str.indexOf("P") >= 0)
     {
             return P;
     }
     else
     {
-        NO_VALID_MESSAGE;
+        return NO_VALID_MESSAGE;
     }
 }
 

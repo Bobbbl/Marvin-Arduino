@@ -2,6 +2,15 @@
 #include "Marvin_Communication.h"
 #include "Marvin_Motor.h"
 #include "Druckpumpe.h"
+#include <string.h>
+
+#define ON  0x01
+#define OFF 0x00
+
+#define DEBUG_WHOLEMESSAGE  OFF
+#define DEBUG_XYF           OFF
+#define DEBUG_P             OFF
+#define DEBUG_S             OFF
 
 extern volatile int shortpin, longpin;
 extern volatile float bcount, bcounti = 0;
@@ -41,7 +50,7 @@ ISR(TIMER3_COMPA_vect)
 
 void setup()
 {
-  Serial.begin(115200);
+  Serial.begin(1000000);
   while (!Serial)
     ; // Wait for Serial to connect
   pinMode(PWM1, OUTPUT);
@@ -58,7 +67,7 @@ void loop()
 {
   // Wait for new Message
 
-  while (checkConnection > 0)
+  while (checkConnection() > 0)
   {
     enum commEnum c = Wait;
     String m = Serial.readString();
@@ -67,10 +76,54 @@ void loop()
     c = GetCommunicationEnum(m);
     struct StringArray xm;
 
+    #if DEBUG_WHOLEMESSAGE
+      Serial.println("Got Message:\r\n");
+      Serial.println(m);
+      Serial.println("commEnum\n");
+      switch (c)
+      {
+        case Wait:
+          Serial.println("Wait");
+          break;
+        case XYF:
+          Serial.println("XYF");
+          break;
+      
+        case S:
+          Serial.println("S");
+          break;
+
+        case P:
+          Serial.println("P");
+          break;
+        default:
+          break;
+      }
+    #endif
     switch (c)
     {
     case XYF:
-      xm = getValueInArray(m, ' ');
+      //xm = getValueInArray(m, ' ');
+      char arr[10];
+      m.toCharArray(arr, 10);
+      char* token = strtok(arr, " ");
+      while(token != NULL)
+      {
+        Serial.println(token);
+        Serial.println("-----");
+        token = strtok(NULL, " ");
+      }
+
+      #if DEBUG_XYF
+      Serial.println("XYF was entered:");
+      
+      for(int i = 0; i < 10; i++)
+      {
+        Serial.println(xm.str_array[i]);
+      }
+      Serial.println("-------------------");
+      
+      #endif
       Strecke s;
       s.x = xm.str_array[1].toFloat();
       s.y = xm.str_array[2].toFloat();
