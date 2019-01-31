@@ -8,7 +8,7 @@
 #define OFF 0x00
 
 #define DEBUG_WHOLEMESSAGE  OFF
-#define DEBUG_XYF           OFF
+#define DEBUG_XYF           ON
 #define DEBUG_P             OFF
 #define DEBUG_S             OFF
 
@@ -50,7 +50,7 @@ ISR(TIMER3_COMPA_vect)
 
 void setup()
 {
-  Serial.begin(1000000);
+  Serial.begin(115200);
   while (!Serial)
     ; // Wait for Serial to connect
   pinMode(PWM1, OUTPUT);
@@ -66,80 +66,56 @@ void setup()
 void loop()
 {
   // Wait for new Message
+  
 
   while (checkConnection() > 0)
   {
     enum commEnum c = Wait;
     String m = Serial.readString();
-    String xMessage, yMessage,
-        sMessage, pMessage;
+    Serial.println(m);
     c = GetCommunicationEnum(m);
     struct StringArray xm;
 
     #if DEBUG_WHOLEMESSAGE
       Serial.println("Got Message:\r\n");
       Serial.println(m);
-      Serial.println("commEnum\n");
-      switch (c)
-      {
-        case Wait:
-          Serial.println("Wait");
-          break;
-        case XYF:
-          Serial.println("XYF");
-          break;
-      
-        case S:
-          Serial.println("S");
-          break;
-
-        case P:
-          Serial.println("P");
-          break;
-        default:
-          break;
-      }
     #endif
     switch (c)
     {
     case XYF:
-      //xm = getValueInArray(m, ' ');
       char arr[10];
-      m.toCharArray(arr, 10);
-      char* token = strtok(arr, " ");
+      m.toCharArray(arr, 20);
+      char* token = strtok(arr, ";");
+
+      int count = 0;
       while(token != NULL)
       {
-        Serial.println(token);
-        Serial.println("-----");
-        token = strtok(NULL, " ");
+        strcpy(xm.str_array[count], token);
+        count++;
+        token = strtok(NULL, ";");
       }
 
-      #if DEBUG_XYF
-      Serial.println("XYF was entered:");
-      
-      for(int i = 0; i < 10; i++)
-      {
-        Serial.println(xm.str_array[i]);
-      }
-      Serial.println("-------------------");
-      
-      #endif
       Strecke s;
-      s.x = xm.str_array[1].toFloat();
-      s.y = xm.str_array[2].toFloat();
-      s.f = xm.str_array[3].toFloat();
-      stepper_motors.bresenham(s);
+      s.x = (float)atof(xm.str_array[1]);
+      s.y = (float)atof(xm.str_array[2]);
+      s.f = (float)atof(xm.str_array[3]);
+      // stepper_motors.bresenham(s);
+      #if DEBUG_XYF
+      Serial.println(s.x);
+      Serial.println(s.y);
+      Serial.println(s.f);
+      #endif
       break;
 
     case S:
       xm = getValueInArray(m, ' ');
-      int ks = xm.str_array[1].toInt();
+      int ks = (int)atoi(xm.str_array[1]);
       spindel.startMotor(rechts, ks);
       break;
 
     case P:
       xm = getValueInArray(m, ' ');
-      int p = xm.str_array[1].toInt();
+      int p = (int)atoi(xm.str_array[1]);
       pump.startMotor(p);
       break;
 

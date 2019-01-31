@@ -139,41 +139,37 @@ enum commEnum GetCommunicationEnum(String str){
     }
 }
 
-struct StringArray getValueInArray(String data, char separator)
-{
-    int found = 0;
-    int strIndex[] = {0, -1};
-    int maxIndex = data.length() - 1;
-    struct StringArray strarray;
+// struct StringArray getValueInArray(String data, char separator)
+// {
+//     int found = 0;
+//     int strIndex[] = {0, -1};
+//     int maxIndex = data.length() - 1;
+//     struct StringArray strarray;
 
-    for (int i = 0; i <= maxIndex; i++)
-    {
-        if (data.charAt(i) == separator || i == maxIndex)
-        {
-            found++;
-        }
-    }
-    strarray.count = found;
-    found = 0;
+//     for (int i = 0; i <= maxIndex; i++)
+//     {
+//         if (data.charAt(i) == separator || i == maxIndex)
+//         {
+//             found++;
+//         }
+//     }
+//     strarray.count = found;
+//     found = 0;
 
-    for (int i = 0; i <= maxIndex; i++)
-    {
-        if (data.charAt(i) == separator || i == maxIndex)
-        {
-            found++;
-            strIndex[0] = strIndex[1] + 1;
-            strIndex[1] = (i == maxIndex) ? i + 1 : i;
-            strarray.str_array[i] = data.substring(strIndex[0], strIndex[1]);
-        }
-    }
+//     for (int i = 0; i <= maxIndex; i++)
+//     {
+//         if (data.charAt(i) == separator || i == maxIndex)
+//         {
+//             found++;
+//             strIndex[0] = strIndex[1] + 1;
+//             strIndex[1] = (i == maxIndex) ? i + 1 : i;
+//             strarray.str_array[i] = data.substring(strIndex[0], strIndex[1]);
+//         }
+//     }
 
-    for (int i = 0; i < 10; i++)
-    {
-        strarray.str_array[i].trim();
-    }
 
-    return strarray;
-}
+//     return strarray;
+// }
 
 Strecke readToolPathLine()
 {

@@ -49,7 +49,7 @@ void sendPointReached();
 // Capsulate up to 10 Strings in this Struct
 struct StringArray{
     int count = 0;
-    String str_array[10];
+    char str_array[10][20];
 };
 struct StringArray getValueInArray(String data, char separator);
 enum commEnum GetCommunicationEnum(String str);
