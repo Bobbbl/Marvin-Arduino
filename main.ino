@@ -4,13 +4,13 @@
 #include "Druckpumpe.h"
 #include <string.h>
 
-#define ON  0x01
+#define ON 0x01
 #define OFF 0x00
 
-#define DEBUG_WHOLEMESSAGE  OFF
-#define DEBUG_XYF           ON
-#define DEBUG_P             OFF
-#define DEBUG_S             OFF
+#define DEBUG_WHOLEMESSAGE OFF
+#define DEBUG_XYF ON
+#define DEBUG_P ON
+#define DEBUG_S ON
 
 extern volatile int shortpin, longpin;
 extern volatile float bcount, bcounti = 0;
@@ -52,8 +52,7 @@ void setup()
 {
   Serial.begin(115200);
   while (!Serial)
-    ; // Wait for Serial to connect
-  pinMode(PWM1, OUTPUT);
+    pinMode(PWM1, OUTPUT);
   pinMode(PWM2, OUTPUT);
   pinMode(DIR1, OUTPUT);
   pinMode(DIR2, OUTPUT);
@@ -63,32 +62,30 @@ void setup()
   stepper_motors.stopTimer4();
 }
 
+String m;
 void loop()
 {
   // Wait for new Message
-  
 
   while (checkConnection() > 0)
   {
     enum commEnum c = Wait;
-    String m = Serial.readString();
-    Serial.println(m);
+
+    m = Serial.readStringUntil('@');
+
     c = GetCommunicationEnum(m);
     struct StringArray xm;
+    char arr[10];
+    m.toCharArray(arr, 20);
+    char *token = strtok(arr, ";");
+    int count = 0;
 
-    #if DEBUG_WHOLEMESSAGE
-      Serial.println("Got Message:\r\n");
-      Serial.println(m);
-    #endif
     switch (c)
     {
     case XYF:
-      char arr[10];
-      m.toCharArray(arr, 20);
-      char* token = strtok(arr, ";");
 
-      int count = 0;
-      while(token != NULL)
+      count = 0;
+      while (token != NULL)
       {
         strcpy(xm.str_array[count], token);
         count++;
@@ -99,23 +96,41 @@ void loop()
       s.x = (float)atof(xm.str_array[1]);
       s.y = (float)atof(xm.str_array[2]);
       s.f = (float)atof(xm.str_array[3]);
-      // stepper_motors.bresenham(s);
-      #if DEBUG_XYF
+      stepper_motors.bresenham(s);
+#if DEBUG_XYF
       Serial.println(s.x);
       Serial.println(s.y);
       Serial.println(s.f);
-      #endif
+#endif
       break;
 
     case S:
-      xm = getValueInArray(m, ' ');
+      count = 0;
+      while (token != NULL)
+      {
+        strcpy(xm.str_array[count], token);
+        count++;
+        token = strtok(NULL, ";");
+      }
       int ks = (int)atoi(xm.str_array[1]);
+#if DEBUG_S
+      Serial.println(ks);
+#endif
       spindel.startMotor(rechts, ks);
       break;
 
     case P:
-      xm = getValueInArray(m, ' ');
+      count = 0;
+      while (token != NULL)
+      {
+        strcpy(xm.str_array[count], token);
+        count++;
+        token = strtok(NULL, ";");
+      }
       int p = (int)atoi(xm.str_array[1]);
+#if DEBUG_P
+      Serial.println(p);
+#endif
       pump.startMotor(p);
       break;
 

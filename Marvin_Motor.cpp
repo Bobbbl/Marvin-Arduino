@@ -270,7 +270,6 @@ void Marvin_Steppers::bresenham(Strecke s)
 
   // Den Compare - Wert setzen
   OCR4A = rcount;
-  Serial.println(rcount);
 
   pulses_x = longline;
   pulses_y = shortline;

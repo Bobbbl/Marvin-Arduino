@@ -102,41 +102,41 @@ public:
     this->number_of_steps_y = 200;
     // Timer is Timer 3 - OC3A is Pin 6 PWM
     // Disable all Interrupts
-    noInterrupts();
-    TCCR3A = 0;
-    TCCR3B = 0;
-    TCNT3 = 0;
-    TCCR3A = 0;
-    TCCR3B = 0;
-    TCCR4A = 0;
-    TCCR4B = 0;
-    // Waveform Generation Mode
-    TCCR3A |= (1 << WGM32); // CTC Mode
-    // Compare Output Mode
-    // TCCR3A |= (1 << COM3A0);  // Toggle OC3A (PE3) bzw. PWM 6 on Compare Match
-    // TCCR3A &= ~(1 << COM3A1); // Toggle OC3A (PE3) bzw. PWM 6 on Compare Match
-    // Prescaler
-    this->prescaler = 64;
-    // TCCR3B |= (1 << CS31); // Prescaler 8
-    // Interrupts
-    TIMSK3 |= (1 << OCIE3A); // Output Compare Interrupt Enabled
-    OCR3A = 0;
+    // noInterrupts();
+    // TCCR3A = 0;
+    // TCCR3B = 0;
+    // TCNT3 = 0;
+    // TCCR3A = 0;
+    // TCCR3B = 0;
+    // TCCR4A = 0;
+    // TCCR4B = 0;
+    // // Waveform Generation Mode
+    // TCCR3A |= (1 << WGM32); // CTC Mode
+    // // Compare Output Mode
+    // // TCCR3A |= (1 << COM3A0);  // Toggle OC3A (PE3) bzw. PWM 6 on Compare Match
+    // // TCCR3A &= ~(1 << COM3A1); // Toggle OC3A (PE3) bzw. PWM 6 on Compare Match
+    // // Prescaler
+    // this->prescaler = 64;
+    // // TCCR3B |= (1 << CS31); // Prescaler 8
+    // // Interrupts
+    // TIMSK3 |= (1 << OCIE3A); // Output Compare Interrupt Enabled
+    // OCR3A = 0;
 
-    TCCR4A = 0;
-    TCCR4B = 0;
-    TCNT4 = 0;
-    // Waveform Generation Mode
-    TCCR4A |= (1 << WGM42); // CTC Mode
-    // Compare Output Mode
-    // TCCR4A |= (1 << COM4A0);  // Toggle OC3A (PE3) bzw. PWM 6 on Compare Match
-    // TCCR4A &= ~(1 << COM4A1); // Toggle OC3A (PE3) bzw. PWM 6 on Compare Match
-    // Prescaler
-    this->prescaler = 64;
-    //TCCR4B |= (1 << CS41); // Prescaler 8
-    // Interrupts
-    TIMSK4 |= (1 << OCIE4A); // Output Compare Interrupt Enabled
-    OCR4A = 0;
-    interrupts();
+    // TCCR4A = 0;
+    // TCCR4B = 0;
+    // TCNT4 = 0;
+    // // Waveform Generation Mode
+    // TCCR4A |= (1 << WGM42); // CTC Mode
+    // // Compare Output Mode
+    // // TCCR4A |= (1 << COM4A0);  // Toggle OC3A (PE3) bzw. PWM 6 on Compare Match
+    // // TCCR4A &= ~(1 << COM4A1); // Toggle OC3A (PE3) bzw. PWM 6 on Compare Match
+    // // Prescaler
+    // this->prescaler = 64;
+    // //TCCR4B |= (1 << CS41); // Prescaler 8
+    // // Interrupts
+    // TIMSK4 |= (1 << OCIE4A); // Output Compare Interrupt Enabled
+    // OCR4A = 0;
+    // interrupts();
   }
 
   void stepPWM(Strecke_Steps_RPM s);
