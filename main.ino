@@ -62,28 +62,64 @@ void setup()
   stepper_motors.stopTimer4();
 }
 
-String m;
 void loop()
 {
+String m;
+    struct StringArray xm;
+    commEnum c = Wait;
+    char *token;
+    int ks, p;
+    char arr[10];
   // Wait for new Message
 
   while (checkConnection() > 0)
   {
-    enum commEnum c = Wait;
 
     m = Serial.readStringUntil('@');
 
     c = GetCommunicationEnum(m);
-    struct StringArray xm;
-    char arr[10];
     m.toCharArray(arr, 20);
-    char *token = strtok(arr, ";");
     int count = 0;
-
     switch (c)
     {
-    case XYF:
+    case P:
+    token = strtok(arr, ";");
+      count = 0;
+      while (token != NULL)
+      {
+        strcpy(xm.str_array[count], token);
+        count++;
+        token = strtok(NULL, ";");
+      }
+      p = (int)atoi(1);
+#if DEBUG_P
+      Serial.println(xm.str_array[1]);
+#endif
+      pump.startMotor(1);
+      m = "";
+      c = Wait;
+      break;
+    case S:
+    token = strtok(arr, ";");
+      count = 0;
+      while (token != NULL)
+      {
+        strcpy(xm.str_array[count], token);
+        count++;
+        token = strtok(NULL, ";");
+      }
+      ks = (int)atoi(1);
 
+#if DEBUG_S
+      Serial.println(xm.str_array[1]);
+#endif
+      spindel.startMotor(rechts, 1);
+      m = "";
+      c = Wait;
+      break;
+
+    case XYF:
+    token = strtok(arr, ";");
       count = 0;
       while (token != NULL)
       {
@@ -102,39 +138,17 @@ void loop()
       Serial.println(s.y);
       Serial.println(s.f);
 #endif
+      m = "";
+      c = Wait;
       break;
 
-    case S:
-      count = 0;
-      while (token != NULL)
-      {
-        strcpy(xm.str_array[count], token);
-        count++;
-        token = strtok(NULL, ";");
-      }
-      int ks = (int)atoi(xm.str_array[1]);
-#if DEBUG_S
-      Serial.println(ks);
-#endif
-      spindel.startMotor(rechts, ks);
-      break;
 
-    case P:
-      count = 0;
-      while (token != NULL)
-      {
-        strcpy(xm.str_array[count], token);
-        count++;
-        token = strtok(NULL, ";");
-      }
-      int p = (int)atoi(xm.str_array[1]);
-#if DEBUG_P
-      Serial.println(p);
-#endif
-      pump.startMotor(p);
+    case NO_VALID_MESSAGE:
+      Serial.println("No Valid Message Sent");
       break;
 
     default:
+      Serial.println("Default Case");
       break;
     }
   }
