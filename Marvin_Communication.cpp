@@ -118,8 +118,8 @@ String getValue(String data, char separator, int index)
     return found > index ? data.substring(strIndex[0], strIndex[1]) : "";
 }
 
-enum commEnum GetCommunicationEnum(String str){
-    enum commEnum c;
+commEnum GetCommunicationEnum(String str){
+    commEnum c;
 
     if(str.indexOf("XYF") >= 0)
     {

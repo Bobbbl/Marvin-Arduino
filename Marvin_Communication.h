@@ -11,7 +11,8 @@
 
 using namespace std;
 
-enum commEnum {XYF, S, P, Wait, NO_VALID_MESSAGE};
+enum cE {XYF, S, P, Wait, NO_VALID_MESSAGE};
+typedef enum cE commEnum;
 
 typedef enum {Start_Session = 0, 
 End_Session = 1,
@@ -52,7 +53,7 @@ struct StringArray{
     char str_array[10][20];
 };
 struct StringArray getValueInArray(String data, char separator);
-enum commEnum GetCommunicationEnum(String str);
+commEnum GetCommunicationEnum(String str);
 
 
 #endif
