@@ -62,17 +62,18 @@ void setup()
   stepper_motors.stopTimer4();
 }
 
-String m;
 void loop()
 {
+    String m;
+    struct StringArray xm;
+    commEnum c = Wait;
+    char *token;
+    int ks, p;
+    char arr[10];
   // Wait for new Message
-  struct StringArray xm;
-  char arr[10];
-  char *token = strtok(arr, ";");
 
   while (checkConnection() > 0)
   {
-    commEnum c = Wait;
 
     m = Serial.readStringUntil('@');
 
@@ -82,8 +83,44 @@ void loop()
 
     switch (c)
     {
-    case XYF:
+    case P:
+    token = strtok(arr, ";");
+      count = 0;
+      while (token != NULL)
+      {
+        strcpy(xm.str_array[count], token);
+        count++;
+        token = strtok(NULL, ";");
+      }
+      p = (int)atoi(xm.str_array[1]);
+#if DEBUG_P
+      Serial.println(xm.str_array[1]);
+#endif
+      pump.startMotor(1);
+      m = "";
+      c = Wait;
+      break;
+    case S:
+    token = strtok(arr, ";");
+      count = 0;
+      while (token != NULL)
+      {
+        strcpy(xm.str_array[count], token);
+        count++;
+        token = strtok(NULL, ";");
+      }
+      ks = (int)atoi(xm.str_array[1]);
 
+#if DEBUG_S
+      Serial.println(xm.str_array[1]);
+#endif
+      spindel.startMotor(rechts, 1);
+      m = "";
+      c = Wait;
+      break;
+
+    case XYF:
+    token = strtok(arr, ";");
       count = 0;
       while (token != NULL)
       {
@@ -96,53 +133,23 @@ void loop()
       s.x = (float)atof(xm.str_array[1]);
       s.y = (float)atof(xm.str_array[2]);
       s.f = (float)atof(xm.str_array[3]);
-      if (s.x > 0)
-        stepper_motors.setDirectionMotorX("rechts");
-      else
-        stepper_motors.setDirectionMotorX("links");
-      if (s.y > 0)
-        stepper_motors.setDirectionMotorY("rechts");
-      else
-        stepper_motors.setDirectionMotorY("links");
       stepper_motors.bresenham(s);
 #if DEBUG_XYF
       Serial.println(s.x);
       Serial.println(s.y);
       Serial.println(s.f);
 #endif
+      m = "";
+      c = Wait;
       break;
 
-    case S:
-      count = 0;
-      while (token != NULL)
-      {
-        strcpy(xm.str_array[count], token);
-        count++;
-        token = strtok(NULL, ";");
-      }
-      int ks = (int)atoi(xm.str_array[1]);
-#if DEBUG_S
-      Serial.println(ks);
-#endif
-      spindel.startMotor(rechts, ks);
-      break;
 
-    case P:
-      count = 0;
-      while (token != NULL)
-      {
-        strcpy(xm.str_array[count], token);
-        count++;
-        token = strtok(NULL, ";");
-      }
-      int p = (int)atoi(xm.str_array[1]);
-#if DEBUG_P
-      Serial.println(p);
-#endif
-      pump.startMotor(p);
+    case NO_VALID_MESSAGE:
+      Serial.println("No Valid Message Sent");
       break;
 
     default:
+      Serial.println("Default Case");
       break;
     }
   }
