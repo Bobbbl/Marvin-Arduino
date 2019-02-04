@@ -66,18 +66,18 @@ String m;
 void loop()
 {
   // Wait for new Message
+  struct StringArray xm;
+  char arr[10];
+  char *token = strtok(arr, ";");
 
   while (checkConnection() > 0)
   {
-    enum commEnum c = Wait;
+    commEnum c = Wait;
 
     m = Serial.readStringUntil('@');
 
     c = GetCommunicationEnum(m);
-    struct StringArray xm;
-    char arr[10];
     m.toCharArray(arr, 20);
-    char *token = strtok(arr, ";");
     int count = 0;
 
     switch (c)
@@ -96,7 +96,7 @@ void loop()
       s.x = (float)atof(xm.str_array[1]);
       s.y = (float)atof(xm.str_array[2]);
       s.f = (float)atof(xm.str_array[3]);
-      if(s.x > 0)
+      if (s.x > 0)
         stepper_motors.setDirectionMotorX("rechts");
       else
         stepper_motors.setDirectionMotorX("links");
