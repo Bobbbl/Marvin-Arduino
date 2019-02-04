@@ -33,7 +33,7 @@ ISR(TIMER3_COMPA_vect)
   digitalWrite(longpin, LOW);
 
   bcounti++;
-  if (bcounti >= bcount)
+  if (bcount >= bcounti)
   {
     bcounti = 0;
     digitalWrite(shortpin, HIGH);
@@ -96,6 +96,14 @@ void loop()
       s.x = (float)atof(xm.str_array[1]);
       s.y = (float)atof(xm.str_array[2]);
       s.f = (float)atof(xm.str_array[3]);
+      if(s.x > 0)
+        stepper_motors.setDirectionMotorX("rechts");
+      else
+        stepper_motors.setDirectionMotorX("links");
+      if (s.y > 0)
+        stepper_motors.setDirectionMotorY("rechts");
+      else
+        stepper_motors.setDirectionMotorY("links");
       stepper_motors.bresenham(s);
 #if DEBUG_XYF
       Serial.println(s.x);

@@ -235,6 +235,7 @@ void Marvin_Steppers::bresenham(Strecke s)
   float stepsx, stepsy;
   stepsx = abs(v.x * STEPS_PER_MILLIMETER_X);
   stepsy = abs(v.y * STEPS_PER_MILLIMETER_Y);
+
   unsigned long longline, shortline;
 
   if (stepsx >= stepsy)
@@ -243,6 +244,7 @@ void Marvin_Steppers::bresenham(Strecke s)
     shortline = round(stepsy);
     longpin = PWM1;
     shortpin = PWM2;
+    
   }
   else
   {
@@ -252,7 +254,7 @@ void Marvin_Steppers::bresenham(Strecke s)
     shortpin = PWM1;
   }
 
-  bcount = round(longline / shortline);
+  bcount = (int)round(longline / shortline);
 
   // Länge Vektor
   float l = sqrt(v.x * v.x + v.y * v.y);
