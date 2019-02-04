@@ -8,9 +8,9 @@
 #define OFF 0x00
 
 #define DEBUG_WHOLEMESSAGE OFF
-#define DEBUG_XYF ON
-#define DEBUG_P ON
-#define DEBUG_S ON
+#define DEBUG_XYF OFF
+#define DEBUG_P OFF
+#define DEBUG_S OFF
 
 extern volatile int shortpin, longpin;
 extern volatile float bcount, bcounti = 0;
@@ -60,6 +60,7 @@ void setup()
   pinMode(END2, INPUT);
   stepper_motors.stopTimer3();
   stepper_motors.stopTimer4();
+  spindel.setRichtung(keine);
 }
 
 void loop()
@@ -92,11 +93,11 @@ void loop()
         count++;
         token = strtok(NULL, ";");
       }
-      p = (int)atoi(xm.str_array[1]);
+      p = atoi(xm.str_array[1]);
 #if DEBUG_P
-      Serial.println(xm.str_array[1]);
+      Serial.println(p);
 #endif
-      pump.startMotor(1);
+      pump.startMotor(p);
       m = "";
       c = Wait;
       break;
@@ -109,12 +110,12 @@ void loop()
         count++;
         token = strtok(NULL, ";");
       }
-      ks = (int)atoi(xm.str_array[1]);
+      ks = atoi(xm.str_array[1]);
 
 #if DEBUG_S
-      Serial.println(xm.str_array[1]);
+      Serial.println(ks);
 #endif
-      spindel.startMotor(rechts, 1);
+      spindel.startMotor(rechts, ks);
       m = "";
       c = Wait;
       break;
@@ -146,10 +147,14 @@ void loop()
 
     case NO_VALID_MESSAGE:
       Serial.println("No Valid Message Sent");
+      c = Wait;
+      m = "";
       break;
 
     default:
       Serial.println("Default Case");
+      c = Wait;
+      m = "";
       break;
     }
   }

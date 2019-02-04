@@ -623,17 +623,19 @@ Richtung über das Enum "Richtung"
 */
 void Spindel::startMotor(Richtung richtung, int speed)
 {
-  uint8_t percent = (uint8_t)((speed/100)+1) * 255;
+  uint8_t percent = (uint8_t)((255.0/100.0 * speed));
   if(getRichtung() != keine) // Der Motor muss offensichtlich noch laufen
   {
     // Das heißt, dass die Richtung nicht geändert werden darf
     analogWrite(PWM3, percent);
+
     return;
   }
   else
   {
     setRichtung(richtung);
     analogWrite(PWM3, percent);
+
   }
 
 }

@@ -3,7 +3,7 @@
 
 void PressurePump::startMotor(int speed)
 {
-  uint8_t percent = (uint8_t)((speed/100)+1) * 255;
+  uint8_t percent = (uint8_t)((255.0/100.0 * speed));
 
   analogWrite(PWM_PressurePump, percent);
 }
