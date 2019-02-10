@@ -48,6 +48,15 @@ ISR(TIMER3_COMPA_vect)
   }
 }
 
+int encoder_pin = 2;                        
+unsigned int rpm = 0;                       
+float velocity = 0;                         
+volatile byte pulses = 0;                   
+unsigned long timeold = 0;                  
+unsigned int pulsesperturn = 20;            
+const int wheel_diameter = 24;              
+static volatile unsigned long debounce = 0; 
+
 void setup()
 {
   Serial.begin(115200);
@@ -61,10 +70,35 @@ void setup()
   stepper_motors.stopTimer3();
   stepper_motors.stopTimer4();
   spindel.setRichtung(keine);
+  pulses = 0;
+  rpm = 0;
+  timeold = 0;
+  attachInterrupt(0, counter, RISING);
+  pinMode(ENCODER_PIN, INPUT);
 }
 
 void loop()
 {
+
+  // Encoder
+  if (millis() - timeold >= 1000)
+  {                                                                    
+    noInterrupts();                                                    
+    rpm = (60 * 1000 / pulsesperturn) / (millis() - timeold) * pulses; 
+    velocity = rpm * 3.1416 * wheel_diameter * 60 / 1000000;           
+    timeold = millis();                                                
+    Serial.print(millis() / 1000);
+    Serial.print("       "); 
+    Serial.print(rpm, DEC);
+    Serial.print("   ");
+    Serial.print(pulses, DEC);
+    Serial.print("     ");
+    Serial.println(velocity, 2);
+    pulses = 0;   
+    interrupts(); 
+  }
+
+  // Toolpath Points
     String m;
     struct StringArray xm;
     commEnum c = Wait;
@@ -73,91 +107,101 @@ void loop()
     char arr[10];
   // Wait for new Message
 
-  while (checkConnection() > 0)
-  {
-
-    m = Serial.readStringUntil('@');
-
-    c = GetCommunicationEnum(m);
-    m.toCharArray(arr, 20);
-    int count = 0;
-
-    switch (c)
+    while (checkConnection() > 0)
     {
-    case P:
-    token = strtok(arr, ";");
-      count = 0;
-      while (token != NULL)
+
+      m = Serial.readStringUntil('@');
+
+      c = GetCommunicationEnum(m);
+      m.toCharArray(arr, 20);
+      int count = 0;
+
+      switch (c)
       {
-        strcpy(xm.str_array[count], token);
-        count++;
-        token = strtok(NULL, ";");
+      case P:
+      token = strtok(arr, ";");
+        count = 0;
+        while (token != NULL)
+        {
+          strcpy(xm.str_array[count], token);
+          count++;
+          token = strtok(NULL, ";");
+        }
+        p = atoi(xm.str_array[1]);
+  #if DEBUG_P
+        Serial.println(p);
+  #endif
+        pump.startMotor(p);
+        m = "";
+        c = Wait;
+        break;
+      case S:
+      token = strtok(arr, ";");
+        count = 0;
+        while (token != NULL)
+        {
+          strcpy(xm.str_array[count], token);
+          count++;
+          token = strtok(NULL, ";");
+        }
+        ks = atoi(xm.str_array[1]);
+
+  #if DEBUG_S
+        Serial.println(ks);
+  #endif
+        spindel.startMotor(rechts, ks);
+        m = "";
+        c = Wait;
+        break;
+
+      case XYF:
+      token = strtok(arr, ";");
+        count = 0;
+        while (token != NULL)
+        {
+          strcpy(xm.str_array[count], token);
+          count++;
+          token = strtok(NULL, ";");
+        }
+
+        Strecke s;
+        s.x = (float)atof(xm.str_array[1]);
+        s.y = (float)atof(xm.str_array[2]);
+        s.f = (float)atof(xm.str_array[3]);
+        stepper_motors.bresenham(s);
+  #if DEBUG_XYF
+        Serial.println(s.x);
+        Serial.println(s.y);
+        Serial.println(s.f);
+  #endif
+        m = "";
+        c = Wait;
+        break;
+
+      case NO_VALID_MESSAGE:
+        Serial.println("No Valid Message Sent");
+        c = Wait;
+        m = "";
+        break;
+
+      default:
+        Serial.println("Default Case");
+        c = Wait;
+        m = "";
+        break;
       }
-      p = atoi(xm.str_array[1]);
-#if DEBUG_P
-      Serial.println(p);
-#endif
-      pump.startMotor(p);
-      m = "";
-      c = Wait;
-      break;
-    case S:
-    token = strtok(arr, ";");
-      count = 0;
-      while (token != NULL)
-      {
-        strcpy(xm.str_array[count], token);
-        count++;
-        token = strtok(NULL, ";");
-      }
-      ks = atoi(xm.str_array[1]);
-
-#if DEBUG_S
-      Serial.println(ks);
-#endif
-      spindel.startMotor(rechts, ks);
-      m = "";
-      c = Wait;
-      break;
-
-    case XYF:
-    token = strtok(arr, ";");
-      count = 0;
-      while (token != NULL)
-      {
-        strcpy(xm.str_array[count], token);
-        count++;
-        token = strtok(NULL, ";");
-      }
-
-      Strecke s;
-      s.x = (float)atof(xm.str_array[1]);
-      s.y = (float)atof(xm.str_array[2]);
-      s.f = (float)atof(xm.str_array[3]);
-      stepper_motors.bresenham(s);
-#if DEBUG_XYF
-      Serial.println(s.x);
-      Serial.println(s.y);
-      Serial.println(s.f);
-#endif
-      m = "";
-      c = Wait;
-      break;
-
-
-    case NO_VALID_MESSAGE:
-      Serial.println("No Valid Message Sent");
-      c = Wait;
-      m = "";
-      break;
-
-    default:
-      Serial.println("Default Case");
-      c = Wait;
-      m = "";
-      break;
     }
-  }
 
   // Switch Case Which Message Was Received
+}
+
+void counter()
+{
+  if (digitalRead(ENCODER_PIN) && (micros() - debounce > 500) && digitalRead(ENCODER_PIN))
+  {
+    debounce = micros();
+    pulses++;
+  }
+  else
+    ;
 }

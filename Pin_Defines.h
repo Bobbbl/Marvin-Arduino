@@ -17,6 +17,7 @@
 #define RENC_B 3
 #define CS A1
 #define CD A0
+#define ENCODER_PIN 2
 //#define MOSI 51
 //#define MISO 50 
 //#define CLK 52
