@@ -20,6 +20,7 @@ TODO:
 #define DEBUG_P OFF
 #define DEBUG_S OFF
 #define ENCODER OFF
+#define ENCODER_ADVANCED ON
 
 extern volatile int shortpin, longpin;
 extern volatile float bcount;
@@ -63,7 +64,7 @@ unsigned int rpm = 0;
 float velocity = 0;
 volatile byte pulses = 0;
 unsigned long timeold = 0;
-unsigned int pulsesperturn = 20;
+unsigned int pulsesperturn = 1;
 const int wheel_diameter = 24;
 static volatile unsigned long debounce = 0;
 
@@ -89,6 +90,10 @@ void setup()
 
 void loop()
 {
+
+#if ENCODER_ADVANCED
+
+#endif
 
 #if ENCODER
   // Encoder
