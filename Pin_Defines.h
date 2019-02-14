@@ -10,7 +10,7 @@
 #define PWM3 12
 #define PWM_PressurePump 11
 #define DIR1 24
-#define DIR2 23
+#define DIR2 23 
 #define END1 4
 #define END2 3
 #define RENC_A 2
