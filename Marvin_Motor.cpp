@@ -123,23 +123,23 @@ void Marvin_Steppers::stepPWM(Strecke_Steps_RPM s)
   // Set Steps
   if (s.steps_x < 0)
   {
-    this->setDirectionMotorX("rechts");
+    this->setDirectionMotorX((char*)"rechts");
     steps_x = -s.steps_x;
   }
   else
   {
-    this->setDirectionMotorX("links");
+    this->setDirectionMotorX((char*)"links");
     steps_x = s.steps_y;
   }
 
   if (s.steps_y < 0)
   {
-    this->setDirectionMotorY("rechts");
+    this->setDirectionMotorY((char*)"rechts");
     steps_y = -s.steps_y;
   }
   else
   {
-    this->setDirectionMotorY("links");
+    this->setDirectionMotorY((char*)"links");
     steps_y = s.steps_y;
   }
 
@@ -190,23 +190,23 @@ void Marvin_Steppers::easyStep(Strecke s)
   // Set Steps
   if (v.x < 0)
   {
-    this->setDirectionMotorX("rechts");
+    this->setDirectionMotorX((char*)"rechts");
     pulses_x = pulsesx;
   }
   else
   {
-    this->setDirectionMotorX("links");
+    this->setDirectionMotorX((char*)"links");
     pulses_x = pulsesx;
   }
 
   if (v.y < 0)
   {
-    this->setDirectionMotorY("rechts");
+    this->setDirectionMotorY((char*)"rechts");
     pulses_y = pulsesy;
   }
   else
   {
-    this->setDirectionMotorY("links");
+    this->setDirectionMotorY((char*)"links");
     pulses_y = pulsesy;
   }
 

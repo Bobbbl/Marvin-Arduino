@@ -14,7 +14,8 @@
 #define ENCODER OFF
 
 extern volatile int shortpin, longpin;
-extern volatile float bcount, bcounti = 0;
+extern volatile float bcount;
+volatile float bcounti = 0;
 extern uint8_t endschalter_flag_x;
 extern uint8_t endschalter_flag_y;
 extern volatile uint16_t steps_x, steps_y;
@@ -80,8 +81,7 @@ void setup()
 
 void loop()
 {
-  digitalWrite(23, HIGH);
-  digitalWrite(24, HIGH);
+
 #if ENCODER
   // Encoder
   if (millis() - timeold >= 1000)
@@ -101,6 +101,7 @@ void loop()
     interrupts(); 
   }
 #endif
+
   // Toolpath Points
     String m;
     struct StringArray xm;
@@ -108,8 +109,8 @@ void loop()
     char *token;
     int ks, p;
     char arr[10];
-  // Wait for new Message
 
+  // Wait for new Message
     while (checkConnection() > 0)
     {
 
@@ -171,19 +172,19 @@ void loop()
         s.x = (float)atof(xm.str_array[1]);
         if(s.x < 0)
         {
-          stepper_motors.setDirectionMotorX("rechts");
+          stepper_motors.setDirectionMotorX((char*)"rechts");
         }
         else
         {
-          stepper_motors.setDirectionMotorX("links");
+          stepper_motors.setDirectionMotorX((char*)"links");
         }
         if(s.y < 0)
         {
-          stepper_motors.setDirectionMotorY("rechts");
+          stepper_motors.setDirectionMotorY((char*)"rechts");
         }
         else
         {
-          stepper_motors.setDirectionMotorY("links");
+          stepper_motors.setDirectionMotorY((char*)"links");
         }
         
         s.y = (float)atof(xm.str_array[2]);
