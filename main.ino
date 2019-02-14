@@ -8,9 +8,10 @@
 #define OFF 0x00
 
 #define DEBUG_WHOLEMESSAGE OFF
-#define DEBUG_XYF OFF
+#define DEBUG_XYF ON
 #define DEBUG_P OFF
 #define DEBUG_S OFF
+#define ENCODER OFF
 
 extern volatile int shortpin, longpin;
 extern volatile float bcount, bcounti = 0;
@@ -79,7 +80,9 @@ void setup()
 
 void loop()
 {
-
+  digitalWrite(23, HIGH);
+  digitalWrite(24, HIGH);
+#if ENCODER
   // Encoder
   if (millis() - timeold >= 1000)
   {                                                                    
@@ -97,7 +100,7 @@ void loop()
     pulses = 0;   
     interrupts(); 
   }
-
+#endif
   // Toolpath Points
     String m;
     struct StringArray xm;
@@ -166,6 +169,23 @@ void loop()
 
         Strecke s;
         s.x = (float)atof(xm.str_array[1]);
+        if(s.x < 0)
+        {
+          stepper_motors.setDirectionMotorX("rechts");
+        }
+        else
+        {
+          stepper_motors.setDirectionMotorX("links");
+        }
+        if(s.y < 0)
+        {
+          stepper_motors.setDirectionMotorY("rechts");
+        }
+        else
+        {
+          stepper_motors.setDirectionMotorY("links");
+        }
+        
         s.y = (float)atof(xm.str_array[2]);
         s.f = (float)atof(xm.str_array[3]);
         stepper_motors.bresenham(s);

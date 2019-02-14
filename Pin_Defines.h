@@ -7,7 +7,7 @@
 
 #define PWM1 5
 #define PWM2 6
-#define PWM3 13
+#define PWM3 12
 #define PWM_PressurePump 11
 #define DIR1 24
 #define DIR2 23
