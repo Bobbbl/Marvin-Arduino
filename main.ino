@@ -1,3 +1,12 @@
+#if 0
+TODO:
+- Funktioniert der Vorschub richtig?
+- Warum funktioniert das mit DIR1 und DIR2 nicht mehr???
+- Den Encoder einkabeln -- Der Stecker ist schon fertig und hängt am Gerät
+- Den Encoder - Code anpassen
+- Das Relay einkabeln
+#endif
+
 #include "Pin_Defines.h"
 #include "Marvin_Communication.h"
 #include "Marvin_Motor.h"
