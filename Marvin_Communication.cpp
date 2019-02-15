@@ -10,8 +10,7 @@ String Sanchezcomm_dict[COMM_LENGTH] = {
     "__Empfang_Besteatigt__",
     "__Receive_Error__",
     "__Receive_Successfull__",
-    "__Point_Reached__"
-};
+    "__Point_Reached__"};
 
 uint8_t checkConnection()
 {
@@ -118,20 +117,25 @@ String getValue(String data, char separator, int index)
     return found > index ? data.substring(strIndex[0], strIndex[1]) : "";
 }
 
-commEnum GetCommunicationEnum(String str){
+commEnum GetCommunicationEnum(String str)
+{
     commEnum c;
 
-    if(str.indexOf("XYF") >= 0)
+    if (str.indexOf("XYF") >= 0)
     {
         return XYF;
     }
-    else if(str.indexOf("S") >= 0)
+    else if (str.indexOf("S") >= 0)
     {
         return S;
     }
-    else if(str.indexOf("P") >= 0)
+    else if (str.indexOf("P") >= 0)
     {
-            return P;
+        return P;
+    }
+    else if (str.indexOf("Z") >= 0)
+    {
+        return Z;
     }
     else
     {
@@ -166,7 +170,6 @@ commEnum GetCommunicationEnum(String str){
 //             strarray.str_array[i] = data.substring(strIndex[0], strIndex[1]);
 //         }
 //     }
-
 
 //     return strarray;
 // }

@@ -11,6 +11,7 @@ TODO:
 #include "Marvin_Motor.h"
 #include "Druckpumpe.h"
 #include <string.h>
+#include <Encoder.h>
 
 #define ON 0x01
 #define OFF 0x00
@@ -34,6 +35,7 @@ const int chipSelect = CS;
 
 uint8_t endschalter_flag_x = 0, endschalter_flag_y = 0;
 
+Encoder encoder_spindel(RENC_A, RENC_B);
 Marvin_Steppers stepper_motors(PWM1, PWM2, DIR1, DIR2);
 Spindel spindel;
 PressurePump pump;
@@ -60,11 +62,11 @@ ISR(TIMER3_COMPA_vect)
 }
 
 int encoder_pin = 2;
-unsigned int rpm = 0;
+float rpm = 0.0;
 float velocity = 0;
 volatile byte pulses = 0;
 unsigned long timeold = 0;
-unsigned int pulsesperturn = 1;
+unsigned int pulsesperturn = 4096;
 const int wheel_diameter = 24;
 static volatile unsigned long debounce = 0;
 
@@ -78,9 +80,12 @@ void setup()
   pinMode(DIR2, OUTPUT);
   pinMode(END1, INPUT);
   pinMode(END2, INPUT);
+  pinMode(RELAY_IN4, OUTPUT);
   stepper_motors.stopTimer3();
   stepper_motors.stopTimer4();
   spindel.setRichtung(keine);
+  digitalWrite(RELAY_IN4, HIGH);
+
   pulses = 0;
   rpm = 0;
   timeold = 0;
@@ -88,11 +93,30 @@ void setup()
   pinMode(ENCODER_PIN, INPUT);
 }
 
+long positionLeft = -999;
+
 void loop()
 {
 
 #if ENCODER_ADVANCED
 
+  long newpos;
+  newpos = encoder_spindel.read();
+
+  if (millis() - timeold >= 1000)
+  {
+    rpm = (60.0 * 1000.0 / pulsesperturn) / (millis() - timeold) * newpos;
+    velocity = rpm * 3.1416 * wheel_diameter * 60.0 / 1000000.0;
+    timeold = millis();
+    Serial.print(millis() / 1000);
+    Serial.print("       ");
+    Serial.print(rpm, DEC);
+    Serial.print("   ");
+    Serial.print(newpos, DEC);
+    Serial.print("     ");
+    Serial.println(velocity, 2);
+    encoder_spindel.write(0);
+  }
 #endif
 
 #if ENCODER
@@ -120,7 +144,7 @@ void loop()
   struct StringArray xm;
   commEnum c = Wait;
   char *token;
-  int ks, p;
+  int ks, p, z;
   char arr[10];
 
   // Wait for new Message
@@ -210,6 +234,22 @@ void loop()
 #endif
       m = "";
       c = Wait;
+      break;
+
+    case Z:
+      token = strtok(arr, ";");
+      count = 0;
+      while (token != NULL)
+      {
+        strcpy(xm.str_array[count], token);
+        count++;
+        token = strtok(NULL, ";");
+      }
+      z = atoi(xm.str_array[1]);
+      if (z == 0)
+        digitalWrite(RELAY_IN4, HIGH);
+      else
+        digitalWrite(RELAY_IN4, LOW);
       break;
 
     case NO_VALID_MESSAGE:

@@ -11,7 +11,7 @@
 
 using namespace std;
 
-enum cE {XYF, S, P, Wait, NO_VALID_MESSAGE};
+enum cE {XYF, S, P, Wait, Z, NO_VALID_MESSAGE};
 typedef enum cE commEnum;
 
 typedef enum {Start_Session = 0, 
