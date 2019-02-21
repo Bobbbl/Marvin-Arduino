@@ -16,6 +16,7 @@ extern uint8_t endschalter_flag_y;
 
 #define STEPS_PER_MILLIMETER_X (float)400.00 // Wieviele Schritte ergeben einen Millimeter X
 #define STEPS_PER_MILLIMETER_Y (float)400.00 // Vieviele Schritte ergeben einen Millimeter Y
+#define STEPS_PER_MILLIMETER (float)400.00
 
 #define CPU_FREQ (unsigned long)16000000
 

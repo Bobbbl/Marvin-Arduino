@@ -123,23 +123,23 @@ void Marvin_Steppers::stepPWM(Strecke_Steps_RPM s)
   // Set Steps
   if (s.steps_x < 0)
   {
-    this->setDirectionMotorX((char*)"rechts");
+    this->setDirectionMotorX((char *)"rechts");
     steps_x = -s.steps_x;
   }
   else
   {
-    this->setDirectionMotorX((char*)"links");
+    this->setDirectionMotorX((char *)"links");
     steps_x = s.steps_y;
   }
 
   if (s.steps_y < 0)
   {
-    this->setDirectionMotorY((char*)"rechts");
+    this->setDirectionMotorY((char *)"rechts");
     steps_y = -s.steps_y;
   }
   else
   {
-    this->setDirectionMotorY((char*)"links");
+    this->setDirectionMotorY((char *)"links");
     steps_y = s.steps_y;
   }
 
@@ -190,23 +190,23 @@ void Marvin_Steppers::easyStep(Strecke s)
   // Set Steps
   if (v.x < 0)
   {
-    this->setDirectionMotorX((char*)"rechts");
+    this->setDirectionMotorX((char *)"rechts");
     pulses_x = pulsesx;
   }
   else
   {
-    this->setDirectionMotorX((char*)"links");
+    this->setDirectionMotorX((char *)"links");
     pulses_x = pulsesx;
   }
 
   if (v.y < 0)
   {
-    this->setDirectionMotorY((char*)"rechts");
+    this->setDirectionMotorY((char *)"rechts");
     pulses_y = pulsesy;
   }
   else
   {
-    this->setDirectionMotorY((char*)"links");
+    this->setDirectionMotorY((char *)"links");
     pulses_y = pulsesy;
   }
 
@@ -244,7 +244,6 @@ void Marvin_Steppers::bresenham(Strecke s)
     shortline = round(stepsy);
     longpin = PWM1;
     shortpin = PWM2;
-    
   }
   else
   {
@@ -266,12 +265,58 @@ void Marvin_Steppers::bresenham(Strecke s)
   float st = t / longline;
 
   // Compare Match Count
-  float count = st * 16000000.00 * this->prescaler;
+  // float count = st * 16000000.00 * this->prescaler;
+  long Prescaler[5] = {1, 2, 8, 256, 1024};
+  long j = 0;
+  long P_FRQ = 16000000; // Processor Frequency
+  long count = 1;
+  float Feed = s.f; // 100 mm/min
+  long PPM = STEPS_PER_MILLIMETER_X; // 200 Pulses per Millimeter
+  long prescaler = 0;
+
+  // Zuerst: berechne die Target Frequency
+  //
+  // Die Target Frequency berechnet sich aus 
+  // dem Vorschub mit 
+  // mm/min * Pulses_Per_Millimeter / 60
+  float target_frq = (Feed * PPM)/60.0;
+
+  // Suche den richtigen Prescaler
+  do
+  {
+      // Hole den naechsten Prescaler
+      prescaler = Prescaler[j];
+      j++;
+      
+      // Teste den Prescaler
+      // Wenn der Prescaler einen Count generiert der:
+      // Einen Count unter 65536 erzeugt
+      // Der Count groesser als 0 ist (Gueltige Parameter)
+      //
+      // dann nimm den Prescaler und trage ihn ein
+      count = P_FRQ / (prescaler * target_frq) - 1;
+      
+      if(count < 65536 && count > 1 || j > 4)
+      {
+          break;
+      }
+  }
+  while(1);
+
+  // Checke Count ob er gültige Werte enthält, wenn nicht
+  // dann füge entsprechend entweder den Maximalwert oder
+  // den Minimalwert ein
+  if(count <= 0)
+    count = 1;
+  else if(count >= 65536)
+    count = 65536;
+
+
   // Count auf Ganzzahl runden
-  unsigned long rcount = round(count);
+  // unsigned long rcount = round(count);
 
   // Den Compare - Wert setzen
-  OCR4A = rcount;
+  OCR4A = count;
 
   pulses_x = longline;
   pulses_y = shortline;
@@ -575,17 +620,17 @@ Strecke_Steps_RPM convertToStepsAndRPM(Strecke s)
 
 void Spindel::setRichtung(Richtung richtung)
 {
-  if(richtung == links)
+  if (richtung == links)
   {
     digitalWrite(IN1, LOW);
     digitalWrite(IN2, HIGH);
   }
-  else if(richtung == rechts)
+  else if (richtung == rechts)
   {
     digitalWrite(IN1, HIGH);
     digitalWrite(IN2, LOW);
   }
-  else if(richtung == keine)
+  else if (richtung == keine)
   {
     analogWrite(PWM3, 0);
     digitalWrite(IN1, LOW);
@@ -606,10 +651,9 @@ speed is in percent [0..100]
 */
 int Spindel::changeSpeed(uint8_t speed)
 {
-  uint8_t percent = (uint8_t)((speed/100)+1) * 255;
+  uint8_t percent = (uint8_t)((speed / 100) + 1) * 255;
   analogWrite(PWM3, percent);
 }
-
 
 void Spindel::stopMotor()
 {
@@ -623,8 +667,8 @@ Richtung über das Enum "Richtung"
 */
 void Spindel::startMotor(Richtung richtung, int speed)
 {
-  uint8_t percent = (uint8_t)((255.0/100.0 * speed));
-  if(getRichtung() != keine) // Der Motor muss offensichtlich noch laufen
+  uint8_t percent = (uint8_t)((255.0 / 100.0 * speed));
+  if (getRichtung() != keine) // Der Motor muss offensichtlich noch laufen
   {
     // Das heißt, dass die Richtung nicht geändert werden darf
     analogWrite(PWM3, percent);
@@ -635,7 +679,5 @@ void Spindel::startMotor(Richtung richtung, int speed)
   {
     setRichtung(richtung);
     analogWrite(PWM3, percent);
-
   }
-
 }
