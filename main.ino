@@ -1,11 +1,3 @@
-#if 0
-TODO:
-- Funktioniert der Vorschub richtig?
-- Den Encoder einkabeln -- Der Stecker ist schon fertig und hängt am Gerät
-- Den Encoder - Code anpassen
-- Das Relay einkabeln
-#endif
-
 #include "Pin_Defines.h"
 #include "Marvin_Communication.h"
 #include "Marvin_Motor.h"
@@ -33,9 +25,9 @@ extern volatile unsigned long pulses_x, pulses_y;
 
 bool running_flag;
 volatile float nextX[100], nextY[100], nextF[100];
-volatile uint8_t
+volatile uint8_t pnumber = 0;
 
-    const int chipSelect = CS;
+const int chipSelect = CS;
 
 uint8_t endschalter_flag_x = 0, endschalter_flag_y = 0;
 
@@ -59,11 +51,49 @@ ISR(TIMER3_COMPA_vect)
   }
 
   pulses_x--;
+  // if (pulses_x <= 0)
+  // {
+  //   pulses_x = 0;
+  //   stepper_motors.stopTimer3();
+  //   running_flag = false;
+  // }
   if (pulses_x <= 0)
   {
     pulses_x = 0;
-    stepper_motors.stopTimer3();
-    running_flag = false;
+
+    if (pnumber > 0)
+    {
+      Strecke s;
+      s.x = nextX[pnumber];
+      s.y = nextY[pnumber];
+      s.f = nextF[pnumber];
+      pnumber--;
+
+      if (s.x < 0)
+      {
+        stepper_motors.setDirectionMotorX((char *)"rechts");
+      }
+      else
+      {
+        stepper_motors.setDirectionMotorX((char *)"links");
+      }
+      if (s.y < 0)
+      {
+        stepper_motors.setDirectionMotorY((char *)"rechts");
+      }
+      else
+      {
+        stepper_motors.setDirectionMotorY((char *)"links");
+      }
+      stepper_motors.bresenham(s);
+      running_flag = true;
+    }
+    else
+    {
+      pulses_x = 0;
+      stepper_motors.stopTimer3();
+      running_flag = false;
+    }
   }
 }
 
@@ -217,37 +247,31 @@ void loop()
         nextX[pnumber] = (float)atof(xm.str_array[1]);
         nextY[pnumber] = (float)atof(xm.str_array[2]);
         nextF[pnumber] = (float)atof(xm.str_array[3]);
-      }
-
-      Strecke s;
-      s.x = (float)atof(xm.str_array[1]);
-      s.y = (float)atof(xm.str_array[2]);
-      s.f = (float)atof(xm.str_array[3]);
-      if (s.x < 0)
-      {
-        stepper_motors.setDirectionMotorX((char *)"rechts");
+        pnumber++;
       }
       else
       {
-        stepper_motors.setDirectionMotorX((char *)"links");
-      }
-      if (s.y < 0)
-      {
-        stepper_motors.setDirectionMotorY((char *)"rechts");
-      }
-      else
-      {
-        stepper_motors.setDirectionMotorY((char *)"links");
-      }
-
-      if (running_flag = true)
-      {
+        Strecke s;
+        s.x = (float)atof(xm.str_array[1]);
+        s.y = (float)atof(xm.str_array[2]);
+        s.f = (float)atof(xm.str_array[3]);
+        if (s.x < 0)
+        {
+          stepper_motors.setDirectionMotorX((char *)"rechts");
+        }
+        else
+        {
+          stepper_motors.setDirectionMotorX((char *)"links");
+        }
+        if (s.y < 0)
+        {
+          stepper_motors.setDirectionMotorY((char *)"rechts");
+        }
+        else
+        {
+          stepper_motors.setDirectionMotorY((char *)"links");
+        }
         stepper_motors.bresenham(s);
-        Serial.println("ACK");
-      }
-      else if (running_flag = true)
-      {
-        next_point.
       }
 
 #if DEBUG_XYF
