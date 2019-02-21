@@ -31,7 +31,11 @@ extern uint8_t endschalter_flag_y;
 extern volatile uint16_t steps_x, steps_y;
 extern volatile unsigned long pulses_x, pulses_y;
 
-const int chipSelect = CS;
+bool running_flag;
+volatile float nextX[100], nextY[100], nextF[100];
+volatile uint8_t
+
+    const int chipSelect = CS;
 
 uint8_t endschalter_flag_x = 0, endschalter_flag_y = 0;
 
@@ -42,6 +46,7 @@ PressurePump pump;
 
 ISR(TIMER3_COMPA_vect)
 {
+  running_flag = true;
   digitalWrite(longpin, HIGH);
   digitalWrite(longpin, LOW);
 
@@ -58,6 +63,7 @@ ISR(TIMER3_COMPA_vect)
   {
     pulses_x = 0;
     stepper_motors.stopTimer3();
+    running_flag = false;
   }
 }
 
@@ -196,6 +202,7 @@ void loop()
       break;
 
     case XYF:
+
       token = strtok(arr, ";");
       count = 0;
       while (token != NULL)
@@ -203,6 +210,13 @@ void loop()
         strcpy(xm.str_array[count], token);
         count++;
         token = strtok(NULL, ";");
+      }
+
+      if (running_flag)
+      {
+        nextX[pnumber] = (float)atof(xm.str_array[1]);
+        nextY[pnumber] = (float)atof(xm.str_array[2]);
+        nextF[pnumber] = (float)atof(xm.str_array[3]);
       }
 
       Strecke s;
@@ -225,7 +239,16 @@ void loop()
       {
         stepper_motors.setDirectionMotorY((char *)"links");
       }
-      stepper_motors.bresenham(s);
+
+      if (running_flag = true)
+      {
+        stepper_motors.bresenham(s);
+        Serial.println("ACK");
+      }
+      else if (running_flag = true)
+      {
+        next_point.
+      }
 
 #if DEBUG_XYF
       Serial.println(s.x);

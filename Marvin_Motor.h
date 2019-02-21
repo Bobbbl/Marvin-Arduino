@@ -67,7 +67,7 @@ class Spindel
 public:
   Spindel()
   {
-    // Pin Output Modes 
+    // Pin Output Modes
     pinMode(PWM3, OUTPUT);
     pinMode(IN1, OUTPUT);
     pinMode(IN2, OUTPUT);
@@ -86,8 +86,6 @@ public:
 
 private:
   Richtung direction = keine;
-
-
 };
 
 class Marvin_Steppers
