@@ -17,14 +17,14 @@
 #define RENC_B              3
 #define CS A1
 #define CD A0
-#define ENCODER_PIN         2
+#define ENCODER_PIN         20
 #define RELAY_IN4           47
 //#define MOSI 51
 //#define MISO 50
 //#define CLK 52
 
-#define IN1                 50
-#define IN2                 51
+#define IN1                 41
+#define IN2                 40
 #define IN3                 52
 #define IN4                 53
 

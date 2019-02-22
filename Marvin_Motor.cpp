@@ -219,7 +219,7 @@ void Marvin_Steppers::easyStep(Strecke s)
 
 void Marvin_Steppers::bresenham(Strecke s)
 {
-  this->prescaler = 256;
+  // this->prescaler = 256;
 
   static Point lastpoint = {.x = 0, .y = 0};
   Point thispoint;
@@ -266,13 +266,14 @@ void Marvin_Steppers::bresenham(Strecke s)
 
   // Compare Match Count
   // float count = st * 16000000.00 * this->prescaler;
-  long Prescaler[5] = {1, 2, 8, 256, 1024};
+  int P[5] = {1, 2, 8, 256, 1024};
   long j = 0;
-  long P_FRQ = 16000000; // Processor Frequency
-  long count = 1;
-  float Feed = s.f; // 100 mm/min
-  long PPM = STEPS_PER_MILLIMETER_X; // 200 Pulses per Millimeter
-  long prescaler = 0;
+  long P_FRQ = 16000000;	// Processor Frequency
+  long cc = 1;
+  float Feed = s.f;		// 100 mm/min
+  long PPM = 200;		// 200 Pulses per Millimeter
+  unsigned long p = 1;
+  long  TIMER_MAX = 65536;
 
   // Zuerst: berechne die Target Frequency
   //
@@ -280,12 +281,24 @@ void Marvin_Steppers::bresenham(Strecke s)
   // dem Vorschub mit 
   // mm/min * Pulses_Per_Millimeter / 60
   float target_frq = (Feed * PPM)/60.0;
+  // Serial.print("Target Frequency: "); Serial.println(target_frq);
 
   // Suche den richtigen Prescaler
   do
   {
       // Hole den naechsten Prescaler
-      prescaler = Prescaler[j];
+      // p = P[j];
+      if(j == 0)
+        p = 1;
+      else if(j == 1)
+        p = 2;
+      else if(j == 2)
+        p = 8;
+      else if(j == 3)
+        p = 256;
+      else if(j == 4)
+        p = 1024;
+
       j++;
       
       // Teste den Prescaler
@@ -294,9 +307,11 @@ void Marvin_Steppers::bresenham(Strecke s)
       // Der Count groesser als 0 ist (Gueltige Parameter)
       //
       // dann nimm den Prescaler und trage ihn ein
-      count = P_FRQ / (prescaler * target_frq) - 1;
+      cc = P_FRQ / (p * target_frq) - 1;
+      // Serial.print("count.... "); Serial.println(cc);
+      // Serial.print("prescaler.... "); Serial.println(p);
       
-      if(count < 65536 && count > 1 || j > 4)
+      if(((cc < TIMER_MAX) && (cc > 1)) || (j > 4))
       {
           break;
       }
@@ -306,23 +321,26 @@ void Marvin_Steppers::bresenham(Strecke s)
   // Checke Count ob er gültige Werte enthält, wenn nicht
   // dann füge entsprechend entweder den Maximalwert oder
   // den Minimalwert ein
-  if(count <= 0)
-    count = 1;
-  else if(count >= 65536)
-    count = 65536;
+  if(cc <= 0)
+    cc = 1;
+  else if(cc >= TIMER_MAX)
+    cc = TIMER_MAX;
 
 
   // Count auf Ganzzahl runden
   // unsigned long rcount = round(count);
 
   // Den Compare - Wert setzen
-  OCR4A = count;
+  // cc = 1;
+  // Serial.print("Final count: "); Serial.println(cc);
+  // Serial.print("Final prescaler: "); Serial.println(p);
+  OCR3A = cc;
 
   pulses_x = longline;
   pulses_y = shortline;
 
   // Timer starten
-  this->startTimer3(this->prescaler);
+  this->startTimer3(p);
 }
 
 void Marvin_Steppers::tt(Strecke s)
@@ -475,22 +493,26 @@ void Marvin_Steppers::startTimer3(unsigned long prescaler)
   switch (prescaler)
   {
   case 1:
-    TCCR3B |= (1 << CS30); // Prescaler 1
+    // Set CS12, CS11 and CS10 bits for 1 prescaler
+    TCCR3B |= (0 << CS32) | (0 << CS31) | (1 << CS30);
     this->prescaler = 1;
     break;
 
   case 8:
-    TCCR3B |= (1 << CS31); // Prescaler 8
+    // Set CS12, CS11 and CS10 bits for 8 prescaler
+    TCCR3B |= (0 << CS32) | (1 << CS31) | (0 << CS30);
     this->prescaler = 8;
     break;
 
   case 64:
-    TCCR3B |= ((1 << CS30) | (1 << CS31)); // Prescaler 64
+    // Set CS12, CS11 and CS10 bits for 64 prescaler
+    TCCR3B |= (0 << CS32) | (1 << CS31) | (1 << CS30);
     this->prescaler = 64;
     break;
 
   case 256:
-    TCCR3B |= (1 << CS32); // Prescaler 256
+    // TCCR3B |= (1 << CS32); // Prescaler 256
+    TCCR3B |= (1 << CS32) | (0 << CS31) | (0 << CS30);
     this->prescaler = 256;
     break;
 
