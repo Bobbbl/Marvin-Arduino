@@ -235,7 +235,7 @@ ISR(TIMER3_COMPA_vect)
         break;
       }
       // Start Timer
-      TCCR3A |= (1 << WGM32); // CTC Mode
+      // TCCR3A |= (1 << WGM32); // CTC Mode
       //-----------------------------------------------------------------------------------
       running_flag = true;
     }
