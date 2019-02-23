@@ -5,8 +5,8 @@
 
 #define DEBUG
 
-#define PWM1                5
-#define PWM2                6
+#define PWM1                5   // (E3)
+#define PWM2                6   // (H3)
 #define PWM3                12
 #define PWM_PressurePump    11
 #define DIR1                24

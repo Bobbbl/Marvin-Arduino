@@ -40,16 +40,36 @@ PressurePump pump;
 
 ISR(TIMER3_COMPA_vect)
 {
+
   running_flag = true;
-  digitalWrite(longpin, HIGH);
-  digitalWrite(longpin, LOW);
+  // digitalWrite(longpin, HIGH); // longpin is PWM1  (Pin 3 on Port H)
+  // PORTH ^= (1<<PH3);
+  if(longpin == 5)
+  {
+      PORTE ^= (1<<PE3);
+  }
+  else
+  {
+      PORTH ^= (1<<PH3);
+  }
+  // digitalWrite(longpin, LOW); 
+  // PORTH ^= (1<<PH3);
 
   bcounti++;
-  if (bcounti >= bcount)
+  if (bcounti >= bcount && bcount != 0)
   {
     bcounti = 0;
-    digitalWrite(shortpin, HIGH);
-    digitalWrite(shortpin, LOW);
+    // digitalWrite(shortpin, HIGH); // shortpin is PWM2 (Pin 3 on Port E)
+    if(shortpin == 5)
+    {
+      PORTE ^= (1<<PE3);
+    }
+    else
+    {
+      PORTH ^= (1<<PH3);
+    }
+    // digitalWrite(shortpin, LOW);
+    // PORTE ^= (1<<PE3);
   }
 
   pulses_x--;
@@ -61,7 +81,10 @@ ISR(TIMER3_COMPA_vect)
   // }
   if (pulses_x <= 0)
   {
-    noInterrupts();
+    // noInterrupts();
+    TCCR3A = 0;
+    TCCR3B = 0;
+    TCNT3 = 0;
     pulses_x = 0;
 
     if (pnumber > 0)
@@ -70,27 +93,47 @@ ISR(TIMER3_COMPA_vect)
       s.x = nextX[0];
       s.y = nextY[0];
       s.f = nextF[0];
+      // Shift all Values
+      float tmp;
+      for(size_t i = 1; i < 100; i++)
+      {
+        tmp = nextX[i];
+        nextX[i-1] = tmp;
+        
+        tmp = nextY[i];
+        nextY[i-1] = tmp;
+
+        tmp = nextF[i];
+        nextF[i-1] = tmp;
+      }
+      
       pnumber--;
       if (s.x < 0)
       {
-        stepper_motors.setDirectionMotorX((char *)"rechts");
+        // stepper_motors.setDirectionMotorX((char *)"rechts");
+        digitalWrite(DIR1, HIGH);
       }
       else
       {
-        stepper_motors.setDirectionMotorX((char *)"links");
+        // stepper_motors.setDirectionMotorX((char *)"links");
+        digitalWrite(DIR1, LOW);
       }
       if (s.y < 0)
       {
-        stepper_motors.setDirectionMotorY((char *)"rechts");
+        // stepper_motors.setDirectionMotorY((char *)"rechts");
+        digitalWrite(DIR2, HIGH);
+
       }
       else
       {
-        stepper_motors.setDirectionMotorY((char *)"links");
+        // stepper_motors.setDirectionMotorY((char *)"links");
+        digitalWrite(DIR2, LOW);
+
       }
       // stepper_motors.bresenham(s);
 
       //-----------------------------------------------------------------------------------
-      static Point lastpoint = {.x = 0, .y = 0};
+      Point lastpoint = {.x = 0, .y = 0};
       Point thispoint;
 
       Vector v;
@@ -98,8 +141,10 @@ ISR(TIMER3_COMPA_vect)
       thispoint.x = s.x;
       thispoint.y = s.y;
 
-      v.x = thispoint.x - lastpoint.x;
-      v.y = thispoint.y - lastpoint.y;
+      // v.x = thispoint.x - lastpoint.x;
+      // v.y = thispoint.y - lastpoint.y;
+      v.x = s.x;
+      v.y = s.y;
 
       float stepsx, stepsy;
       stepsx = abs(v.x * STEPS_PER_MILLIMETER_X);
@@ -149,7 +194,7 @@ ISR(TIMER3_COMPA_vect)
       // Die Target Frequency berechnet sich aus
       // dem Vorschub mit
       // mm/min * Pulses_Per_Millimeter / 60
-      float target_frq = (Feed * PPM) / 60.0;
+      float target_frq = ((Feed * PPM) / 60.0)*2.0;
       // Serial.print("Target Frequency: "); Serial.println(target_frq);
 
       // Suche den richtigen Prescaler
@@ -160,9 +205,9 @@ ISR(TIMER3_COMPA_vect)
         if (j == 0)
           p = 1;
         else if (j == 1)
-          p = 2;
-        else if (j == 2)
           p = 8;
+        else if (j == 2)
+          p = 64;
         else if (j == 3)
           p = 256;
         else if (j == 4)
@@ -205,6 +250,8 @@ ISR(TIMER3_COMPA_vect)
       // Interrupts
       // TCCR3B |= (1 << CS32); // Prescaler 256
 
+      TCCR3B = 0;
+
       switch (p)
       {
       case 1:
@@ -235,17 +282,19 @@ ISR(TIMER3_COMPA_vect)
         break;
       }
       // Start Timer
-      // TCCR3A |= (1 << WGM32); // CTC Mode
+      TCCR3A |= (1 << WGM32); // CTC Mode
       //-----------------------------------------------------------------------------------
-      running_flag = true;
+            running_flag = true;
     }
     else
     {
       pulses_x = 0;
-      stepper_motors.stopTimer3();
+      // stepper_motors.stopTimer3();
+      TCCR3B = 0;
+      TCCR3A = 0;
       running_flag = false;
     }
-    interrupts();
+    // interrupts();
   }
 }
 
@@ -260,9 +309,12 @@ static volatile unsigned long debounce = 0;
 
 void setup()
 {
+  TCCR3A = 0;
+  TCCR3B = 0;
+  TCNT3 = 0;
   Serial.begin(115200);
   while (!Serial)
-    pinMode(PWM1, OUTPUT);
+  pinMode(PWM1, OUTPUT);
   pinMode(PWM2, OUTPUT);
   pinMode(DIR1, OUTPUT);
   pinMode(DIR2, OUTPUT);
@@ -273,6 +325,8 @@ void setup()
   stepper_motors.stopTimer4();
   spindel.setRichtung(keine);
   digitalWrite(RELAY_IN4, HIGH);
+
+
 
   pulses = 0;
   rpm = 0;
@@ -312,7 +366,7 @@ void loop()
   // Encoder
   if (millis() - timeold >= 1000)
   {
-    noInterrupts();
+    // noInterrupts();
     rpm = (60 * 1000 / pulsesperturn) / (millis() - timeold) * pulses;
     velocity = rpm * 3.1416 * wheel_diameter * 60 / 1000000;
     timeold = millis();
@@ -324,7 +378,7 @@ void loop()
     Serial.print("     ");
     Serial.println(velocity, 2);
     pulses = 0;
-    interrupts();
+    // interrupts();
   }
 #endif
 
@@ -384,6 +438,7 @@ void loop()
       break;
 
     case XYF:
+      // noInterrupts();
 
       token = strtok(arr, ";");
       count = 0;
@@ -403,18 +458,20 @@ void loop()
 #if DEBUG_XYF
         Serial.println("Point was added to Q");
         Serial.print("X: ");
-        Serial.print(nextX[pnumber]);
+        Serial.print(nextX[pnumber-1]);
         Serial.print("Y: ");
-        Serial.print(nextY[pnumber]);
+        Serial.print(nextY[pnumber-1]);
         Serial.print("F: ");
-        Serial.println(nextF[pnumber]);
+        Serial.println(nextF[pnumber-1]);
         Serial.print("With \"running_flag\" of: ");
         Serial.println(running_flag);
 #endif
+      // interrupts();
       }
       else
       {
         Strecke s;
+        Serial.println(xm.str_array[1]);
         s.x = (float)atof(xm.str_array[1]);
         s.y = (float)atof(xm.str_array[2]);
         s.f = (float)atof(xm.str_array[3]);

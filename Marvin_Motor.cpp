@@ -220,6 +220,9 @@ void Marvin_Steppers::easyStep(Strecke s)
 void Marvin_Steppers::bresenham(Strecke s)
 {
   // this->prescaler = 256;
+  TCCR3A = 0;
+  TCCR3B = 0;
+  TCNT3 = 0;
 
   static Point lastpoint = {.x = 0, .y = 0};
   Point thispoint;
@@ -229,12 +232,17 @@ void Marvin_Steppers::bresenham(Strecke s)
   thispoint.x = s.x;
   thispoint.y = s.y;
 
-  v.x = thispoint.x - lastpoint.x;
-  v.y = thispoint.y - lastpoint.y;
+  // v.x = thispoint.x - lastpoint.x;
+  // v.y = thispoint.y - lastpoint.y;
+  v.x = s.x;
+  v.y = s.y;
 
   float stepsx, stepsy;
   stepsx = abs(v.x * STEPS_PER_MILLIMETER_X);
   stepsy = abs(v.y * STEPS_PER_MILLIMETER_Y);
+  // Serial.print("stepsx: "); Serial.println(stepsx);
+  // Serial.print("stepsy: "); Serial.println(stepsy);
+
 
   unsigned long longline, shortline;
 
@@ -254,24 +262,18 @@ void Marvin_Steppers::bresenham(Strecke s)
   }
 
   bcount = (int)round(longline / shortline);
+  // Serial.print("bcount: "); Serial.println(bcount);
 
   // Länge Vektor
   float l = sqrt(v.x * v.x + v.y * v.y);
 
-  // Zeit in Sekunden
-  float t = l / s.f * 60.0;
-
-  // Zeit pro Schritt
-  float st = t / longline;
-
   // Compare Match Count
-  // float count = st * 16000000.00 * this->prescaler;
-  int P[5] = {1, 2, 8, 256, 1024};
+  int P[6] = {1, 2, 8, 64, 256, 1024};
   long j = 0;
   long P_FRQ = 16000000;	// Processor Frequency
   long cc = 1;
   float Feed = s.f;		// 100 mm/min
-  long PPM = 200;		// 200 Pulses per Millimeter
+  long PPM = 400;		// 200 Pulses per Millimeter
   unsigned long p = 1;
   long  TIMER_MAX = 65536;
 
@@ -280,7 +282,7 @@ void Marvin_Steppers::bresenham(Strecke s)
   // Die Target Frequency berechnet sich aus 
   // dem Vorschub mit 
   // mm/min * Pulses_Per_Millimeter / 60
-  float target_frq = (Feed * PPM)/60.0;
+  float target_frq = ((Feed * PPM)/60.0)*2.0;
   // Serial.print("Target Frequency: "); Serial.println(target_frq);
 
   // Suche den richtigen Prescaler
@@ -291,13 +293,14 @@ void Marvin_Steppers::bresenham(Strecke s)
       if(j == 0)
         p = 1;
       else if(j == 1)
-        p = 2;
-      else if(j == 2)
         p = 8;
+      else if(j == 2)
+        p = 64;
       else if(j == 3)
         p = 256;
       else if(j == 4)
         p = 1024;
+      
 
       j++;
       
@@ -341,12 +344,24 @@ void Marvin_Steppers::bresenham(Strecke s)
 
   // Timer starten
   this->startTimer3(p);
+  DDRE |= (1 << 3);
+  TCCR3A |= (1 << WGM32); // CTC Mode
+  TCCR3B = 0;
+  if(p==1)
+    TCCR3B |= (1 << CS30);
+  else if(p==8)
+    TCCR3B |= (1 << CS31);
+
+  TIMSK3 |= (1 << OCIE3A); // Output Compare Interrupt Enabled
+
+
+
 }
 
 void Marvin_Steppers::tt(Strecke s)
 {
 
-  this->prescaler = 256;
+  // this->prescaler = 256;
 
   static Point lastpoint = {.x = 0, .y = 0};
   Point thispoint;
@@ -468,26 +483,25 @@ void Marvin_Steppers::step(int steps_to_move_x, int steps_to_move_y)
 
 void Marvin_Steppers::stopTimer3()
 {
-  cli();
   // Stop Timer
-  TCCR3B &= ~((1 << CS32) | (1 << CS31) | (1 << CS30));
+  // TCCR3B &= ~((1 << CS32) | (1 << CS31) | (1 << CS30));
+  TCCR3B = 0;
+  TCCR3A = 0;
   // TCCR3B = 0x00;
-  sei();
 }
 
 void Marvin_Steppers::startTimer3(unsigned long prescaler)
 {
+  DDRE |= (1 << 3);
   // Start Timer
   TCCR3A |= (1 << WGM32); // CTC Mode
-  DDRE |= (1 << 3);
   // Compare Output Mode
-  TCCR3A |= (1 << COM3A0);  // Toggle OC3A (PE3) bzw. PWM 6 on Compare Match
-  TCCR3A &= ~(1 << COM3A1); // Toggle OC3A (PE3) bzw. PWM 6 on Compare Match
+  // TCCR3A |= (1 << COM3A0);  // Toggle OC3A (PE3) bzw. PWM 6 on Compare Match
+  // TCCR3A &= ~(1 << COM3A1); // Toggle OC3A (PE3) bzw. PWM 6 on Compare Match
   // Prescaler
-  this->prescaler = prescaler;
+  // this->prescaler = prescaler;
   // TCCR3B |= (1 << CS31); // Prescaler 8
   // Interrupts
-  TIMSK3 |= (1 << OCIE3A); // Output Compare Interrupt Enabled
   // TCCR3B |= (1 << CS32); // Prescaler 256
 
   switch (prescaler)
@@ -524,6 +538,10 @@ void Marvin_Steppers::startTimer3(unsigned long prescaler)
   default:
     break;
   }
+
+  TIMSK3 |= (1 << OCIE3A); // Output Compare Interrupt Enabled
+  
+
 }
 
 void Marvin_Steppers::stopTimer4()
