@@ -338,21 +338,31 @@ void Marvin_Steppers::bresenham(Strecke s)
   // Serial.print("Final count: "); Serial.println(cc);
   // Serial.print("Final prescaler: "); Serial.println(p);
   OCR3A = cc;
+  // Serial.print("OCR3A: "); Serial.println(OCR3A);
+
 
   pulses_x = longline;
   pulses_y = shortline;
 
   // Timer starten
-  this->startTimer3(p);
+  // this->startTimer3(p);
+
   DDRE |= (1 << 3);
   TCCR3A |= (1 << WGM32); // CTC Mode
+  TIMSK3 |= (1 << OCIE3A); // Output Compare Interrupt Enabled
   TCCR3B = 0;
   if(p==1)
     TCCR3B |= (1 << CS30);
   else if(p==8)
     TCCR3B |= (1 << CS31);
+  else if(p == 64)
+    TCCR3B |= (0 << CS32) | (1 << CS31) | (1 << CS30);
+  else if(p==256)
+    TCCR3B |= (1 << CS32) | (0 << CS31) | (0 << CS30);
+  else if(p==1024)
+    TCCR3B |= ((1 << CS30) | (1 << CS32)); // Prescaler 1024
 
-  TIMSK3 |= (1 << OCIE3A); // Output Compare Interrupt Enabled
+
 
 
 
@@ -547,9 +557,9 @@ void Marvin_Steppers::startTimer3(unsigned long prescaler)
 void Marvin_Steppers::stopTimer4()
 {
   // Stop Timer
-  cli();
+  // cli();
   TCCR4B &= ~((1 << CS42) | (1 << CS41) | (1 << CS40));
-  sei();
+  // sei();
 }
 
 void Marvin_Steppers::startTimer4(unsigned long prescaler)

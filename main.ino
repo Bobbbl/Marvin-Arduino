@@ -4,7 +4,7 @@
 #include "Druckpumpe.h"
 #include <string.h>
 // #define ENCODER_OPTIMIZE_INTERRUPTS
-#include <Encoder.h>
+// #include <Encoder.h>
 
 #define ON 0x01
 #define OFF 0x00
@@ -40,6 +40,7 @@ PressurePump pump;
 
 ISR(TIMER3_COMPA_vect)
 {
+  TCNT3 = 0;
 
   running_flag = true;
   // digitalWrite(longpin, HIGH); // longpin is PWM1  (Pin 3 on Port H)
@@ -298,12 +299,12 @@ ISR(TIMER3_COMPA_vect)
   }
 }
 
-int encoder_pin = 2;
-float rpm = 0.0;
-float velocity = 0;
+volatile int encoder_pin = 2;
+volatile float rpm = 0.0;
+volatile float velocity = 0;
 volatile long pulses = 0;
-unsigned long timeold = 0;
-unsigned int pulsesperturn = 1;
+volatile unsigned long timeold = 0;
+volatile unsigned int pulsesperturn = 1;
 const int wheel_diameter = 24;
 static volatile unsigned long debounce = 0;
 
@@ -321,8 +322,8 @@ void setup()
   pinMode(END1, INPUT);
   pinMode(END2, INPUT);
   pinMode(RELAY_IN4, OUTPUT);
-  stepper_motors.stopTimer3();
-  stepper_motors.stopTimer4();
+  // stepper_motors.stopTimer3();
+  // stepper_motors.stopTimer4();
   spindel.setRichtung(keine);
   digitalWrite(RELAY_IN4, HIGH);
 
@@ -404,7 +405,7 @@ void loop()
     case P:
       token = strtok(arr, ";");
       count = 0;
-      while (token != NULL)
+      while (token != NULL && count < 20)
       {
         strcpy(xm.str_array[count], token);
         count++;
@@ -421,7 +422,7 @@ void loop()
     case S:
       token = strtok(arr, ";");
       count = 0;
-      while (token != NULL)
+      while (token != NULL && count < 20)
       {
         strcpy(xm.str_array[count], token);
         count++;
@@ -442,7 +443,7 @@ void loop()
 
       token = strtok(arr, ";");
       count = 0;
-      while (token != NULL)
+      while (token != NULL && count < 20)
       {
         strcpy(xm.str_array[count], token);
         count++;
@@ -471,7 +472,6 @@ void loop()
       else
       {
         Strecke s;
-        Serial.println(xm.str_array[1]);
         s.x = (float)atof(xm.str_array[1]);
         s.y = (float)atof(xm.str_array[2]);
         s.f = (float)atof(xm.str_array[3]);
@@ -514,7 +514,7 @@ void loop()
     case Z:
       token = strtok(arr, ";");
       count = 0;
-      while (token != NULL)
+      while (token != NULL && count < 20)
       {
         strcpy(xm.str_array[count], token);
         count++;
@@ -546,6 +546,7 @@ void loop()
 
 void counter()
 {
+  // noInterrupts();
   // if (digitalRead(ENCODER_PIN) /*&& (micros() - debounce > 500) && digitalRead(ENCODER_PIN)*/)
   // {
     // debounce = micros();
@@ -553,4 +554,5 @@ void counter()
   // }
   // else
     // ;
+    // interrupts();
 }
