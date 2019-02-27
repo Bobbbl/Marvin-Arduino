@@ -319,6 +319,8 @@ void setup()
   pinMode(PWM2, OUTPUT);
   pinMode(DIR1, OUTPUT);
   pinMode(DIR2, OUTPUT);
+  pinMode(DIR3, OUTPUT);
+  pinMode(DIR4, OUTPUT);
   pinMode(END1, INPUT);
   pinMode(END2, INPUT);
   pinMode(RELAY_IN4, OUTPUT);
@@ -344,23 +346,23 @@ void loop()
 #if ENCODER_ADVANCED
 
   long newpos;
-  // newpos = encoder_spindel.read();
-  // encoder_spindel.write(0);
+  newpos = encoder_spindel.read();
+  encoder_spindel.write(0);
 
-  // if (millis() - timeold >= 100)
-  // {
-  //   rpm = (60.0 * 1000.0 / pulsesperturn) / (millis() - timeold) * newpos;
-  //   velocity = rpm * 3.1416 * wheel_diameter * 60.0 / 1000000.0;
-  //   timeold = millis();
-  //   Serial.print(millis() / 1000);
-  //   Serial.print("       ");
-  //   Serial.print(rpm, DEC);
-  //   Serial.print("   ");
-  //   Serial.print(newpos, DEC);
-  //   Serial.print("     ");
-  //   Serial.println(velocity, 2);
-  //   encoder_spindel.write(0);
-  // }
+  if (millis() - timeold >= 100)
+  {
+    rpm = (60.0 * 1000.0 / pulsesperturn) / (millis() - timeold) * newpos;
+    velocity = rpm * 3.1416 * wheel_diameter * 60.0 / 1000000.0;
+    timeold = millis();
+    Serial.print(millis() / 1000);
+    Serial.print("       ");
+    Serial.print(rpm, DEC);
+    Serial.print("   ");
+    Serial.print(newpos, DEC);
+    Serial.print("     ");
+    Serial.println(velocity, 2);
+    encoder_spindel.write(0);
+  }
 #endif
 
 #if ENCODER
