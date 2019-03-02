@@ -1,3 +1,10 @@
+// TODO: add STEPS_PER_MILLIMETER_X over Serial
+// TODO: add a "Point Stack Empty" Message
+// TODO: add STEPS_PER_MILLIMETER_Y over Serial
+// TODO: add LIM1 functionality
+// TODO: add LIM2 functionality
+// TODO: add a completed functionality
+// TODO: clean up the count() - funtion from comments
 #include "Pin_Defines.h"
 #include "Marvin_Communication.h"
 #include "Marvin_Motor.h"
@@ -24,10 +31,9 @@ extern uint8_t endschalter_flag_y;
 extern volatile uint16_t steps_x, steps_y;
 extern volatile unsigned long pulses_x, pulses_y;
 
-bool running_flag;
-volatile float nextX[100], nextY[100], nextF[100];
+bool running_flag, REACHED = false;
+volatile float nextX[100], nextY[100], nextF[100], Xreached, Yreached, Freached;
 volatile uint8_t pnumber = 0;
-volatile uint8_t pnumberI = 0;
 
 const int chipSelect = CS;
 
@@ -45,15 +51,15 @@ ISR(TIMER3_COMPA_vect)
   running_flag = true;
   // digitalWrite(longpin, HIGH); // longpin is PWM1  (Pin 3 on Port H)
   // PORTH ^= (1<<PH3);
-  if(longpin == 5)
+  if (longpin == 5)
   {
-      PORTE ^= (1<<PE3);
+    PORTE ^= (1 << PE3);
   }
   else
   {
-      PORTH ^= (1<<PH3);
+    PORTH ^= (1 << PH3);
   }
-  // digitalWrite(longpin, LOW); 
+  // digitalWrite(longpin, LOW);
   // PORTH ^= (1<<PH3);
 
   bcounti++;
@@ -61,13 +67,13 @@ ISR(TIMER3_COMPA_vect)
   {
     bcounti = 0;
     // digitalWrite(shortpin, HIGH); // shortpin is PWM2 (Pin 3 on Port E)
-    if(shortpin == 5)
+    if (shortpin == 5)
     {
-      PORTE ^= (1<<PE3);
+      PORTE ^= (1 << PE3);
     }
     else
     {
-      PORTH ^= (1<<PH3);
+      PORTH ^= (1 << PH3);
     }
     // digitalWrite(shortpin, LOW);
     // PORTE ^= (1<<PE3);
@@ -90,25 +96,30 @@ ISR(TIMER3_COMPA_vect)
 
     if (pnumber > 0)
     {
+    REACHED = true;
       Strecke s;
       s.x = nextX[0];
       s.y = nextY[0];
       s.f = nextF[0];
+      Xreached = s.x;
+      Yreached = s.y;
+      Freached = s.f;
+      pnumber--;
+
       // Shift all Values
       float tmp;
-      for(size_t i = 1; i < 100; i++)
+      for (size_t i = 1; i < 100; i++)
       {
         tmp = nextX[i];
-        nextX[i-1] = tmp;
-        
+        nextX[i - 1] = tmp;
+
         tmp = nextY[i];
-        nextY[i-1] = tmp;
+        nextY[i - 1] = tmp;
 
         tmp = nextF[i];
-        nextF[i-1] = tmp;
+        nextF[i - 1] = tmp;
       }
-      
-      pnumber--;
+
       if (s.x < 0)
       {
         // stepper_motors.setDirectionMotorX((char *)"rechts");
@@ -123,13 +134,11 @@ ISR(TIMER3_COMPA_vect)
       {
         // stepper_motors.setDirectionMotorY((char *)"rechts");
         digitalWrite(DIR2, HIGH);
-
       }
       else
       {
         // stepper_motors.setDirectionMotorY((char *)"links");
         digitalWrite(DIR2, LOW);
-
       }
       // stepper_motors.bresenham(s);
 
@@ -195,7 +204,7 @@ ISR(TIMER3_COMPA_vect)
       // Die Target Frequency berechnet sich aus
       // dem Vorschub mit
       // mm/min * Pulses_Per_Millimeter / 60
-      float target_frq = ((Feed * PPM) / 60.0)*2.0;
+      float target_frq = ((Feed * PPM) / 60.0) * 2.0;
       // Serial.print("Target Frequency: "); Serial.println(target_frq);
 
       // Suche den richtigen Prescaler
@@ -284,8 +293,8 @@ ISR(TIMER3_COMPA_vect)
       }
       // Start Timer
       TCCR3A |= (1 << WGM32); // CTC Mode
-      //-----------------------------------------------------------------------------------
-            running_flag = true;
+                              //-----------------------------------------------------------------------------------
+      running_flag = true;
     }
     else
     {
@@ -315,7 +324,7 @@ void setup()
   TCNT3 = 0;
   Serial.begin(115200);
   while (!Serial)
-  pinMode(PWM1, OUTPUT);
+    pinMode(PWM1, OUTPUT);
   pinMode(PWM2, OUTPUT);
   pinMode(DIR1, OUTPUT);
   pinMode(DIR2, OUTPUT);
@@ -331,8 +340,6 @@ void setup()
   pinMode(IN3, OUTPUT);
   pinMode(IN4, OUTPUT);
 
-
-
   pulses = 0;
   rpm = 0;
   timeold = 0;
@@ -344,27 +351,40 @@ long positionLeft = -999;
 
 void loop()
 {
+  if (REACHED)
+  {
+    Serial.print("Reached X: ");
+    Serial.print(Xreached);
+    Serial.print(" Y: ");
+    Serial.print(Yreached);
+    Serial.print(" F: ");
+    Serial.println(Freached);
+    REACHED = false;
+    Xreached = -1;
+    Yreached = -1;
+    Freached = -1;
+  }
 
 #if ENCODER_ADVANCED
 
   long newpos;
-  // newpos = encoder_spindel.read();
-  // encoder_spindel.write(0);
+  newpos = encoder_spindel.read();
+  encoder_spindel.write(0);
 
-  // if (millis() - timeold >= 100)
-  // {
-  //   rpm = (60.0 * 1000.0 / pulsesperturn) / (millis() - timeold) * newpos;
-  //   velocity = rpm * 3.1416 * wheel_diameter * 60.0 / 1000000.0;
-  //   timeold = millis();
-  //   Serial.print(millis() / 1000);
-  //   Serial.print("       ");
-  //   Serial.print(rpm, DEC);
-  //   Serial.print("   ");
-  //   Serial.print(newpos, DEC);
-  //   Serial.print("     ");
-  //   Serial.println(velocity, 2);
-  //   encoder_spindel.write(0);
-  // }
+  if (millis() - timeold >= 100)
+  {
+    rpm = (60.0 * 1000.0 / pulsesperturn) / (millis() - timeold) * newpos;
+    velocity = rpm * 3.1416 * wheel_diameter * 60.0 / 1000000.0;
+    timeold = millis();
+    Serial.print(millis() / 1000);
+    Serial.print("       ");
+    Serial.print(rpm, DEC);
+    Serial.print("   ");
+    Serial.print(newpos, DEC);
+    Serial.print("     ");
+    Serial.println(velocity, 2);
+    encoder_spindel.write(0);
+  }
 #endif
 
 #if ENCODER
@@ -422,6 +442,8 @@ void loop()
       pump.startMotor(p);
       m = "";
       c = Wait;
+      Serial.print("ACK P ");
+      Serial.println(p);
       break;
     case S:
       token = strtok(arr, ";");
@@ -440,6 +462,8 @@ void loop()
       spindel.startMotor(rechts, ks);
       m = "";
       c = Wait;
+      Serial.print("ACK S ");
+      Serial.println(ks);
       break;
 
     case XYF:
@@ -463,15 +487,15 @@ void loop()
 #if DEBUG_XYF
         Serial.println("Point was added to Q");
         Serial.print("X: ");
-        Serial.print(nextX[pnumber-1]);
+        Serial.print(nextX[pnumber - 1]);
         Serial.print("Y: ");
-        Serial.print(nextY[pnumber-1]);
+        Serial.print(nextY[pnumber - 1]);
         Serial.print("F: ");
-        Serial.println(nextF[pnumber-1]);
+        Serial.println(nextF[pnumber - 1]);
         Serial.print("With \"running_flag\" of: ");
         Serial.println(running_flag);
 #endif
-      // interrupts();
+        // interrupts();
       }
       else
       {
@@ -479,23 +503,15 @@ void loop()
         s.x = (float)atof(xm.str_array[1]);
         s.y = (float)atof(xm.str_array[2]);
         s.f = (float)atof(xm.str_array[3]);
+        nextX[pnumber] = (float)atof(xm.str_array[1]);
+        nextY[pnumber] = (float)atof(xm.str_array[2]);
+        nextF[pnumber] = (float)atof(xm.str_array[3]);
+        pnumber++;
+        Xreached = s.x;
+        Yreached = s.y;
+        Freached = s.f;
+        REACHED = false;
 
-        if (s.x < 0)
-        {
-          stepper_motors.setDirectionMotorX((char *)"rechts");
-        }
-        else
-        {
-          stepper_motors.setDirectionMotorX((char *)"links");
-        }
-        if (s.y < 0)
-        {
-          stepper_motors.setDirectionMotorY((char *)"rechts");
-        }
-        else
-        {
-          stepper_motors.setDirectionMotorY((char *)"links");
-        }
         stepper_motors.bresenham(s);
         running_flag = true;
 #if DEBUG_XYF
@@ -513,6 +529,12 @@ void loop()
 
       m = "";
       c = Wait;
+      Serial.print("ACK XYF ");
+      Serial.print(xm.str_array[1]);
+      Serial.print(" ");
+      Serial.print(xm.str_array[2]);
+      Serial.print(" ");
+      Serial.println(xm.str_array[3]);
       break;
 
     case Z:
@@ -535,6 +557,8 @@ void loop()
       Serial.println("No Valid Message Sent");
       c = Wait;
       m = "";
+      Serial.print("ACK Z ");
+      Serial.println(ks);
       break;
 
     default:
@@ -553,10 +577,10 @@ void counter()
   // noInterrupts();
   // if (digitalRead(ENCODER_PIN) /*&& (micros() - debounce > 500) && digitalRead(ENCODER_PIN)*/)
   // {
-    // debounce = micros();
-    pulses++;
+  // debounce = micros();
+  pulses++;
   // }
   // else
-    // ;
-    // interrupts();
+  // ;
+  // interrupts();
 }

@@ -5,6 +5,7 @@ volatile int longpin, shortpin;
 volatile float bcount = 0;
 volatile uint16_t steps_x = 0, steps_y = 0;
 volatile unsigned long pulses_x = 0, pulses_y = 0;
+extern Marvin_Steppers stepper_motors;
 
 void Marvin_Steppers::doHoming()
 {
@@ -219,6 +220,22 @@ void Marvin_Steppers::easyStep(Strecke s)
 
 void Marvin_Steppers::bresenham(Strecke s)
 {
+        if (s.x < 0)
+        {
+          stepper_motors.setDirectionMotorX((char *)"rechts");
+        }
+        else
+        {
+          stepper_motors.setDirectionMotorX((char *)"links");
+        }
+        if (s.y < 0)
+        {
+          stepper_motors.setDirectionMotorY((char *)"rechts");
+        }
+        else
+        {
+          stepper_motors.setDirectionMotorY((char *)"links");
+        }
   // this->prescaler = 256;
   TCCR3A = 0;
   TCCR3B = 0;
