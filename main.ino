@@ -3,7 +3,7 @@
 // TODO: add STEPS_PER_MILLIMETER_Y over Serial
 // TODO: add LIM1 functionality
 // TODO: add LIM2 functionality
-// TODO: add a completed functionality
+// TODO: add Stop Message which let the server stop the movement
 // TODO: clean up the count() - funtion from comments
 #include "Pin_Defines.h"
 #include "Marvin_Communication.h"
