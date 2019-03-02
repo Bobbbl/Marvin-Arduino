@@ -25,7 +25,10 @@
 
 #define IN1                 41
 #define IN2                 40
-#define IN3                 52
-#define IN4                 53
+#define IN3                 6
+#define IN4                 7
+
+#define LIM1                A0 
+#define LIM2                A1
 
 #endif

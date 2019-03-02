@@ -322,10 +322,14 @@ void setup()
   pinMode(END1, INPUT);
   pinMode(END2, INPUT);
   pinMode(RELAY_IN4, OUTPUT);
+  pinMode(LIM1, INPUT);
+  pinMode(LIM2, INPUT);
   // stepper_motors.stopTimer3();
   // stepper_motors.stopTimer4();
   spindel.setRichtung(keine);
   digitalWrite(RELAY_IN4, HIGH);
+  pinMode(IN3, OUTPUT);
+  pinMode(IN4, OUTPUT);
 
 
 
