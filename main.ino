@@ -328,6 +328,8 @@ void setup()
   pinMode(PWM2, OUTPUT);
   pinMode(DIR1, OUTPUT);
   pinMode(DIR2, OUTPUT);
+  pinMode(DIR3, OUTPUT);
+  pinMode(DIR4, OUTPUT);
   pinMode(END1, INPUT);
   pinMode(END2, INPUT);
   pinMode(RELAY_IN4, OUTPUT);
