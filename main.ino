@@ -17,6 +17,8 @@
 #define DEBUG_S OFF
 #define ENCODER ON
 #define ENCODER_ADVANCED OFF
+#define LIMIT_SWITCH1 OFF
+#define LIMIT_SWITCH2 OFF
 
 extern volatile int shortpin, longpin;
 extern volatile float bcount;
@@ -345,13 +347,23 @@ void setup()
 }
 
 long positionLeft = -999;
+volatile commEnum c = Wait;
 
 void loop()
 {
-  if(!digitalRead(LIM1) || !digitalRead(LIM2))
+#if LIMIT_SWITCH1
+  if (!digitalRead(LIM1))
   {
     stopAll();
   }
+#endif
+
+#if LIMIT_SWITCH2
+  if (!digitalRead(LIM2))
+  {
+    stopAll();
+  }
+#endif
   if (REACHED)
   {
     Serial.print("Reached X: ");
@@ -411,7 +423,6 @@ void loop()
   // Toolpath Points
   String m;
   struct StringArray xm;
-  commEnum c = Wait;
   char *token;
   int ks, p, z;
   char arr[10];
@@ -467,9 +478,9 @@ void loop()
       Serial.println(ks);
       break;
 
+ 
     case XYF:
       // noInterrupts();
-
       token = strtok(arr, ";");
       count = 0;
       while (token != NULL && count < 20)
@@ -535,7 +546,7 @@ void loop()
       Serial.print(" ");
       Serial.print(xm.str_array[2]);
       Serial.print(" ");
-      Serial.println(xm.str_array[3]);
+      Serial.println(xm.str_array[3]); 
       break;
 
     case Z:
@@ -556,6 +567,7 @@ void loop()
 
     case STOP:
       stopAll();
+      break;
 
     case NO_VALID_MESSAGE:
       Serial.println("No Valid Message Sent");
@@ -586,14 +598,14 @@ void stopAll()
   // Stop Pump
   spindel.stopMotor();
   stepper_motors.stopMotors();
-  pumpe.stopMotor();
+  pump.stopMotor();
   // Clear Point Queue
-      for (size_t i = 1; i < 100; i++)
-      {
-        nextX[i] = 0;
-        nextY[i] = 0;
-        nextF[i] = 0;
-      }
+  for (size_t i = 1; i < 100; i++)
+  {
+    nextX[i] = 0;
+    nextY[i] = 0;
+    nextF[i] = 0;
+  }
   // Reset Pointer
   pnumber = 0;
   // Reset Running Flag

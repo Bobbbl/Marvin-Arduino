@@ -346,9 +346,8 @@ void Marvin_Steppers::bresenham(Strecke s)
   pulses_y = shortline;
 
   // Timer starten
-
+  TCCR3A |= (1 << WGM32); // CTC Mode
   DDRE |= (1 << 3);
-  TCCR3A |= (1 << WGM32);  // CTC Mode
   TIMSK3 |= (1 << OCIE3A); // Output Compare Interrupt Enabled
   TCCR3B = 0;
   if (p == 1)

@@ -13,13 +13,13 @@ using namespace std;
 
 enum cE 
 {
-    XYF,
-    S,
-    P,
-    Wait,
-    Z,
-    STOP,
-    NO_VALID_MESSAGE
+    XYF = 0x00,
+    S = 0x01,
+    P = 0x02,
+    Wait = 0x03,
+    Z = 0x04,
+    STOP = 0x05,
+    NO_VALID_MESSAGE = 0x06
     
     };
 typedef enum cE commEnum;

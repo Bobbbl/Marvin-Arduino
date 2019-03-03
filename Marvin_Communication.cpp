@@ -137,7 +137,7 @@ commEnum GetCommunicationEnum(String str)
     {
         return Z;
     }
-    else if (str.indexOf("STOP") >= 0)
+    else if (str.indexOf("T") >= 0)
     {
         return STOP;
     }
