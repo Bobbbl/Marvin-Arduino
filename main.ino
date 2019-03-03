@@ -478,7 +478,6 @@ void loop()
       Serial.println(ks);
       break;
 
- 
     case XYF:
       // noInterrupts();
       token = strtok(arr, ";");
@@ -546,7 +545,7 @@ void loop()
       Serial.print(" ");
       Serial.print(xm.str_array[2]);
       Serial.print(" ");
-      Serial.println(xm.str_array[3]); 
+      Serial.println(xm.str_array[3]);
       break;
 
     case Z:
@@ -560,9 +559,15 @@ void loop()
       }
       z = atoi(xm.str_array[1]);
       if (z == 0)
+      {
         digitalWrite(RELAY_IN4, HIGH);
+        Serial.println("ACK Z HIGH");
+      }
       else
+      {
         digitalWrite(RELAY_IN4, LOW);
+        Serial.println("ACK Z LOW");
+      }
       break;
 
     case STOP:
