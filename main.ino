@@ -1,10 +1,8 @@
 // TODO: add STEPS_PER_MILLIMETER_X over Serial
-// TODO: add a "Point Stack Empty" Message
 // TODO: add STEPS_PER_MILLIMETER_Y over Serial
 // TODO: add LIM1 functionality
 // TODO: add LIM2 functionality
 // TODO: add Stop Message which let the server stop the movement
-// TODO: clean up the count() - funtion from comments
 #include "Pin_Defines.h"
 #include "Marvin_Communication.h"
 #include "Marvin_Motor.h"
@@ -96,7 +94,7 @@ ISR(TIMER3_COMPA_vect)
 
     if (pnumber > 0)
     {
-    REACHED = true;
+      REACHED = true;
       Strecke s;
       s.x = nextX[0];
       s.y = nextY[0];
@@ -576,13 +574,5 @@ void loop()
 
 void counter()
 {
-  // noInterrupts();
-  // if (digitalRead(ENCODER_PIN) /*&& (micros() - debounce > 500) && digitalRead(ENCODER_PIN)*/)
-  // {
-  // debounce = micros();
   pulses++;
-  // }
-  // else
-  // ;
-  // interrupts();
 }

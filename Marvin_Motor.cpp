@@ -220,28 +220,28 @@ void Marvin_Steppers::easyStep(Strecke s)
 
 void Marvin_Steppers::bresenham(Strecke s)
 {
-        if (s.x < 0)
-        {
-          stepper_motors.setDirectionMotorX((char *)"rechts");
-        }
-        else
-        {
-          stepper_motors.setDirectionMotorX((char *)"links");
-        }
-        if (s.y < 0)
-        {
-          stepper_motors.setDirectionMotorY((char *)"rechts");
-        }
-        else
-        {
-          stepper_motors.setDirectionMotorY((char *)"links");
-        }
-  // this->prescaler = 256;
+  if (s.x < 0)
+  {
+    stepper_motors.setDirectionMotorX((char *)"rechts");
+  }
+  else
+  {
+    stepper_motors.setDirectionMotorX((char *)"links");
+  }
+  if (s.y < 0)
+  {
+    stepper_motors.setDirectionMotorY((char *)"rechts");
+  }
+  else
+  {
+    stepper_motors.setDirectionMotorY((char *)"links");
+  }
+
   TCCR3A = 0;
   TCCR3B = 0;
   TCNT3 = 0;
 
-  static Point lastpoint = {.x = 0, .y = 0};
+  Point lastpoint = {.x = 0, .y = 0};
   Point thispoint;
 
   Vector v;
@@ -249,17 +249,12 @@ void Marvin_Steppers::bresenham(Strecke s)
   thispoint.x = s.x;
   thispoint.y = s.y;
 
-  // v.x = thispoint.x - lastpoint.x;
-  // v.y = thispoint.y - lastpoint.y;
   v.x = s.x;
   v.y = s.y;
 
   float stepsx, stepsy;
   stepsx = abs(v.x * STEPS_PER_MILLIMETER_X);
   stepsy = abs(v.y * STEPS_PER_MILLIMETER_Y);
-  // Serial.print("stepsx: "); Serial.println(stepsx);
-  // Serial.print("stepsy: "); Serial.println(stepsy);
-
 
   unsigned long longline, shortline;
 
@@ -279,7 +274,6 @@ void Marvin_Steppers::bresenham(Strecke s)
   }
 
   bcount = (int)round(longline / shortline);
-  // Serial.print("bcount: "); Serial.println(bcount);
 
   // Länge Vektor
   float l = sqrt(v.x * v.x + v.y * v.y);
@@ -287,102 +281,82 @@ void Marvin_Steppers::bresenham(Strecke s)
   // Compare Match Count
   int P[6] = {1, 2, 8, 64, 256, 1024};
   long j = 0;
-  long P_FRQ = 16000000;	// Processor Frequency
+  long P_FRQ = 16000000; // Processor Frequency
   long cc = 1;
-  float Feed = s.f;		// 100 mm/min
-  long PPM = 400;		// 200 Pulses per Millimeter
+  float Feed = s.f; // 100 mm/min
+  long PPM = 400;   // 200 Pulses per Millimeter
   unsigned long p = 1;
-  long  TIMER_MAX = 65536;
+  long TIMER_MAX = 65536;
 
   // Zuerst: berechne die Target Frequency
   //
-  // Die Target Frequency berechnet sich aus 
-  // dem Vorschub mit 
+  // Die Target Frequency berechnet sich aus
+  // dem Vorschub mit
   // mm/min * Pulses_Per_Millimeter / 60
-  float target_frq = ((Feed * PPM)/60.0)*2.0;
-  // Serial.print("Target Frequency: "); Serial.println(target_frq);
+  float target_frq = ((Feed * PPM) / 60.0) * 2.0;
 
   // Suche den richtigen Prescaler
   do
   {
-      // Hole den naechsten Prescaler
-      // p = P[j];
-      if(j == 0)
-        p = 1;
-      else if(j == 1)
-        p = 8;
-      else if(j == 2)
-        p = 64;
-      else if(j == 3)
-        p = 256;
-      else if(j == 4)
-        p = 1024;
-      
+    // Hole den naechsten Prescaler
+    // p = P[j];
+    if (j == 0)
+      p = 1;
+    else if (j == 1)
+      p = 8;
+    else if (j == 2)
+      p = 64;
+    else if (j == 3)
+      p = 256;
+    else if (j == 4)
+      p = 1024;
 
-      j++;
-      
-      // Teste den Prescaler
-      // Wenn der Prescaler einen Count generiert der:
-      // Einen Count unter 65536 erzeugt
-      // Der Count groesser als 0 ist (Gueltige Parameter)
-      //
-      // dann nimm den Prescaler und trage ihn ein
-      cc = P_FRQ / (p * target_frq) - 1;
-      // Serial.print("count.... "); Serial.println(cc);
-      // Serial.print("prescaler.... "); Serial.println(p);
-      
-      if(((cc < TIMER_MAX) && (cc > 1)) || (j > 4))
-      {
-          break;
-      }
-  }
-  while(1);
+    j++;
+
+    // Teste den Prescaler
+    // Wenn der Prescaler einen Count generiert der:
+    // Einen Count unter 65536 erzeugt
+    // Der Count groesser als 0 ist (Gueltige Parameter)
+    //
+    // dann nimm den Prescaler und trage ihn ein
+    cc = P_FRQ / (p * target_frq) - 1;
+
+    if (((cc < TIMER_MAX) && (cc > 1)) || (j > 4))
+    {
+      break;
+    }
+  } while (1);
 
   // Checke Count ob er gültige Werte enthält, wenn nicht
   // dann füge entsprechend entweder den Maximalwert oder
   // den Minimalwert ein
-  if(cc <= 0)
+  if (cc <= 0)
     cc = 1;
-  else if(cc >= TIMER_MAX)
+  else if (cc >= TIMER_MAX)
     cc = TIMER_MAX;
 
-
-  // Count auf Ganzzahl runden
-  // unsigned long rcount = round(count);
-
   // Den Compare - Wert setzen
-  // cc = 1;
-  // Serial.print("Final count: "); Serial.println(cc);
-  // Serial.print("Final prescaler: "); Serial.println(p);
   OCR3A = cc;
-  // Serial.print("OCR3A: "); Serial.println(OCR3A);
-
 
   pulses_x = longline;
   pulses_y = shortline;
 
   // Timer starten
-  // this->startTimer3(p);
 
   DDRE |= (1 << 3);
-  TCCR3A |= (1 << WGM32); // CTC Mode
+  TCCR3A |= (1 << WGM32);  // CTC Mode
   TIMSK3 |= (1 << OCIE3A); // Output Compare Interrupt Enabled
   TCCR3B = 0;
-  if(p==1)
+  if (p == 1)
     TCCR3B |= (1 << CS30);
-  else if(p==8)
+  else if (p == 8)
     TCCR3B |= (1 << CS31);
-  else if(p == 64)
+  else if (p == 64)
     TCCR3B |= (0 << CS32) | (1 << CS31) | (1 << CS30);
-  else if(p==256)
+  else if (p == 256)
     TCCR3B |= (1 << CS32) | (0 << CS31) | (0 << CS30);
-  else if(p==1024)
-    TCCR3B |= ((1 << CS30) | (1 << CS32)); // Prescaler 1024
-
-
-
-
-
+  else if (p == 1024)
+    TCCR3B |= ((1 << CS30) | (1 << CS32)); 
 }
 
 void Marvin_Steppers::tt(Strecke s)
@@ -567,8 +541,6 @@ void Marvin_Steppers::startTimer3(unsigned long prescaler)
   }
 
   TIMSK3 |= (1 << OCIE3A); // Output Compare Interrupt Enabled
-  
-
 }
 
 void Marvin_Steppers::stopTimer4()
