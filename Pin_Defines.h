@@ -17,8 +17,6 @@
 #define END2                3
 #define RENC_A              2
 #define RENC_B              3
-#define CS A1
-#define CD A0
 #define ENCODER_PIN         20
 #define RELAY_IN4           47
 //#define MOSI 51

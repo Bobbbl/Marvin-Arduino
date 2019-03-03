@@ -19,7 +19,8 @@ enum cE
     Wait = 0x03,
     Z = 0x04,
     STOP = 0x05,
-    NO_VALID_MESSAGE = 0x06
+    NO_VALID_MESSAGE = 0x06,
+    SPM = 0x07
     
     };
 typedef enum cE commEnum;

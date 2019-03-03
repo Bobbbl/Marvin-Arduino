@@ -158,6 +158,7 @@ public:
   void setDirectionMotorX(char *str);
   void setDirectionMotorY(char *str);
   void bresenham(Strecke s);
+  void bresenham(Strecke s, long ppm);
   void tt(Strecke s);
   int version();
   void stopMotors();

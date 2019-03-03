@@ -288,7 +288,146 @@ void Marvin_Steppers::bresenham(Strecke s)
   long P_FRQ = 16000000; // Processor Frequency
   long cc = 1;
   float Feed = s.f; // 100 mm/min
-  long PPM = 400;   // 200 Pulses per Millimeter
+  long PPM = STEPS_PER_MILLIMETER;   // 200 Pulses per Millimeter
+  unsigned long p = 1;
+  long TIMER_MAX = 65536;
+
+  // Zuerst: berechne die Target Frequency
+  //
+  // Die Target Frequency berechnet sich aus
+  // dem Vorschub mit
+  // mm/min * Pulses_Per_Millimeter / 60
+  float target_frq = ((Feed * PPM) / 60.0) * 2.0;
+
+  // Suche den richtigen Prescaler
+  do
+  {
+    // Hole den naechsten Prescaler
+    // p = P[j];
+    if (j == 0)
+      p = 1;
+    else if (j == 1)
+      p = 8;
+    else if (j == 2)
+      p = 64;
+    else if (j == 3)
+      p = 256;
+    else if (j == 4)
+      p = 1024;
+
+    j++;
+
+    // Teste den Prescaler
+    // Wenn der Prescaler einen Count generiert der:
+    // Einen Count unter 65536 erzeugt
+    // Der Count groesser als 0 ist (Gueltige Parameter)
+    //
+    // dann nimm den Prescaler und trage ihn ein
+    cc = P_FRQ / (p * target_frq) - 1;
+
+    if (((cc < TIMER_MAX) && (cc > 1)) || (j > 4))
+    {
+      break;
+    }
+  } while (1);
+
+  // Checke Count ob er gültige Werte enthält, wenn nicht
+  // dann füge entsprechend entweder den Maximalwert oder
+  // den Minimalwert ein
+  if (cc <= 0)
+    cc = 1;
+  else if (cc >= TIMER_MAX)
+    cc = TIMER_MAX;
+
+  // Den Compare - Wert setzen
+  OCR3A = cc;
+
+  pulses_x = longline;
+  pulses_y = shortline;
+
+  // Timer starten
+  TCCR3A |= (1 << WGM32); // CTC Mode
+  DDRE |= (1 << 3);
+  TIMSK3 |= (1 << OCIE3A); // Output Compare Interrupt Enabled
+  TCCR3B = 0;
+  if (p == 1)
+    TCCR3B |= (1 << CS30);
+  else if (p == 8)
+    TCCR3B |= (1 << CS31);
+  else if (p == 64)
+    TCCR3B |= (0 << CS32) | (1 << CS31) | (1 << CS30);
+  else if (p == 256)
+    TCCR3B |= (1 << CS32) | (0 << CS31) | (0 << CS30);
+  else if (p == 1024)
+    TCCR3B |= ((1 << CS30) | (1 << CS32)); 
+}
+
+void Marvin_Steppers::bresenham(Strecke s, long PPM)
+{
+  if (s.x < 0)
+  {
+    stepper_motors.setDirectionMotorX((char *)"rechts");
+  }
+  else
+  {
+    stepper_motors.setDirectionMotorX((char *)"links");
+  }
+  if (s.y < 0)
+  {
+    stepper_motors.setDirectionMotorY((char *)"rechts");
+  }
+  else
+  {
+    stepper_motors.setDirectionMotorY((char *)"links");
+  }
+
+  TCCR3A = 0;
+  TCCR3B = 0;
+  TCNT3 = 0;
+
+  Point lastpoint = {.x = 0, .y = 0};
+  Point thispoint;
+
+  Vector v;
+
+  thispoint.x = s.x;
+  thispoint.y = s.y;
+
+  v.x = s.x;
+  v.y = s.y;
+
+  float stepsx, stepsy;
+  stepsx = abs(v.x * STEPS_PER_MILLIMETER_X);
+  stepsy = abs(v.y * STEPS_PER_MILLIMETER_Y);
+
+  unsigned long longline, shortline;
+
+  if (stepsx >= stepsy)
+  {
+    longline = round(stepsx);
+    shortline = round(stepsy);
+    longpin = PWM1;
+    shortpin = PWM2;
+  }
+  else
+  {
+    longline = round(stepsy);
+    shortline = round(stepsx);
+    longpin = PWM2;
+    shortpin = PWM1;
+  }
+
+  bcount = (int)round(longline / shortline);
+
+  // Länge Vektor
+  float l = sqrt(v.x * v.x + v.y * v.y);
+
+  // Compare Match Count
+  int P[6] = {1, 2, 8, 64, 256, 1024};
+  long j = 0;
+  long P_FRQ = 16000000; // Processor Frequency
+  long cc = 1;
+  float Feed = s.f; // 100 mm/min
   unsigned long p = 1;
   long TIMER_MAX = 65536;
 

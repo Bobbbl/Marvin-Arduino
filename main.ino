@@ -1,5 +1,3 @@
-// TODO: add STEPS_PER_MILLIMETER_X over Serial
-// TODO: add STEPS_PER_MILLIMETER_Y over Serial
 #include "Pin_Defines.h"
 #include "Marvin_Communication.h"
 #include "Marvin_Motor.h"
@@ -31,8 +29,7 @@ extern volatile unsigned long pulses_x, pulses_y;
 bool running_flag, REACHED = false;
 volatile float nextX[100], nextY[100], nextF[100], Xreached, Yreached, Freached;
 volatile uint8_t pnumber = 0;
-
-const int chipSelect = CS;
+long steps_per_millimeter = (long)-1;
 
 uint8_t endschalter_flag_x = 0, endschalter_flag_y = 0;
 
@@ -351,6 +348,10 @@ volatile commEnum c = Wait;
 
 void loop()
 {
+  if(steps_per_millimeter == -1)
+  {
+    steps_per_millimeter = STEPS_PER_MILLIMETER;
+  }
 #if LIMIT_SWITCH1
   if (!digitalRead(LIM1))
   {
@@ -523,7 +524,7 @@ void loop()
         Freached = s.f;
         REACHED = false;
 
-        stepper_motors.bresenham(s);
+        stepper_motors.bresenham(s, steps_per_millimeter);
         running_flag = true;
 #if DEBUG_XYF
         Serial.println("Motor was started. No points in Q");
@@ -572,6 +573,19 @@ void loop()
 
     case STOP:
       stopAll();
+      break;
+    
+    case SPM:
+      token = strtok(arr, ";");
+      count = 0;
+      while (token != NULL && count < 20)
+      {
+        strcpy(xm.str_array[count], token);
+        count++;
+        token = strtok(NULL, ";");
+      }
+      steps_per_millimeter = atoi(xm.str_array[1]);
+      Serial.println("ACK SPM "); Serial.println(steps_per_millimeter);
       break;
 
     case NO_VALID_MESSAGE:
