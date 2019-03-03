@@ -160,6 +160,7 @@ public:
   void bresenham(Strecke s);
   void tt(Strecke s);
   int version();
+  void stopMotors();
 
 private:
   void stopTimer();

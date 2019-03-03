@@ -1,8 +1,5 @@
 // TODO: add STEPS_PER_MILLIMETER_X over Serial
 // TODO: add STEPS_PER_MILLIMETER_Y over Serial
-// TODO: add LIM1 functionality
-// TODO: add LIM2 functionality
-// TODO: add Stop Message which let the server stop the movement
 #include "Pin_Defines.h"
 #include "Marvin_Communication.h"
 #include "Marvin_Motor.h"
@@ -351,6 +348,10 @@ long positionLeft = -999;
 
 void loop()
 {
+  if(!digitalRead(LIM1) || !digitalRead(LIM2))
+  {
+    stopAll();
+  }
   if (REACHED)
   {
     Serial.print("Reached X: ");
@@ -553,12 +554,13 @@ void loop()
         digitalWrite(RELAY_IN4, LOW);
       break;
 
+    case STOP:
+      stopAll();
+
     case NO_VALID_MESSAGE:
       Serial.println("No Valid Message Sent");
       c = Wait;
       m = "";
-      Serial.print("ACK Z ");
-      Serial.println(ks);
       break;
 
     default:
@@ -575,4 +577,27 @@ void loop()
 void counter()
 {
   pulses++;
+}
+
+void stopAll()
+{
+  // Stop Spindel
+  // Stop Steppers
+  // Stop Pump
+  spindel.stopMotor();
+  stepper_motors.stopMotors();
+  pumpe.stopMotor();
+  // Clear Point Queue
+      for (size_t i = 1; i < 100; i++)
+      {
+        nextX[i] = 0;
+        nextY[i] = 0;
+        nextF[i] = 0;
+      }
+  // Reset Pointer
+  pnumber = 0;
+  // Reset Running Flag
+  running_flag = false;
+  // Reset REACHED Flag
+  REACHED = false;
 }

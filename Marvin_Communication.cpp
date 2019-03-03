@@ -137,6 +137,10 @@ commEnum GetCommunicationEnum(String str)
     {
         return Z;
     }
+    else if (str.indexOf("STOP") >= 0)
+    {
+        return STOP;
+    }
     else
     {
         return NO_VALID_MESSAGE;

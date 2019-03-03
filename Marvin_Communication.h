@@ -18,6 +18,7 @@ enum cE
     P,
     Wait,
     Z,
+    STOP,
     NO_VALID_MESSAGE
     
     };

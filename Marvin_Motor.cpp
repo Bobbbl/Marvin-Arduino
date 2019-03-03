@@ -7,6 +7,10 @@ volatile uint16_t steps_x = 0, steps_y = 0;
 volatile unsigned long pulses_x = 0, pulses_y = 0;
 extern Marvin_Steppers stepper_motors;
 
+void Marvin_Steppers::stopMotors()
+{
+  stopTimer3();
+}
 void Marvin_Steppers::doHoming()
 {
   // Set Speed to pretty Slow
