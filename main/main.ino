@@ -271,12 +271,11 @@ ISR(TIMER3_COMPA_vect)
     else
     {
       pulses_x = 0;
-      // stepper_motors.stopTimer3();
       TCCR3B = 0;
       TCCR3A = 0;
       running_flag = false;
+      pnumber = 0;
     }
-    // interrupts();
   }
 }
 
@@ -547,6 +546,7 @@ void loop()
 
     case STOP:
       stopAll();
+      Serial.println("ACK STOP");
       break;
 
     case SPM:
