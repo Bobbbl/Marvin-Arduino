@@ -29,7 +29,7 @@ extern volatile unsigned long pulses_x, pulses_y;
 bool running_flag, REACHED = false;
 volatile float nextX[100], nextY[100], nextF[100], Xreached, Yreached, Freached;
 volatile uint8_t pnumber = 0;
-long steps_per_millimeter = (long)-1;
+volatile long steps_per_millimeter = (long)-1;
 
 uint8_t endschalter_flag_x = 0, endschalter_flag_y = 0;
 
@@ -43,8 +43,6 @@ ISR(TIMER3_COMPA_vect)
   TCNT3 = 0;
 
   running_flag = true;
-  // digitalWrite(longpin, HIGH); // longpin is PWM1  (Pin 3 on Port H)
-  // PORTH ^= (1<<PH3);
   if (longpin == 5)
   {
     PORTE ^= (1 << PE3);
@@ -53,14 +51,11 @@ ISR(TIMER3_COMPA_vect)
   {
     PORTH ^= (1 << PH3);
   }
-  // digitalWrite(longpin, LOW);
-  // PORTH ^= (1<<PH3);
 
   bcounti++;
   if (bcounti >= bcount && bcount != 0)
   {
     bcounti = 0;
-    // digitalWrite(shortpin, HIGH); // shortpin is PWM2 (Pin 3 on Port E)
     if (shortpin == 5)
     {
       PORTE ^= (1 << PE3);
@@ -69,20 +64,11 @@ ISR(TIMER3_COMPA_vect)
     {
       PORTH ^= (1 << PH3);
     }
-    // digitalWrite(shortpin, LOW);
-    // PORTE ^= (1<<PE3);
   }
 
   pulses_x--;
-  // if (pulses_x <= 0)
-  // {
-  //   pulses_x = 0;
-  //   stepper_motors.stopTimer3();
-  //   running_flag = false;
-  // }
   if (pulses_x <= 0)
   {
-    // noInterrupts();
     TCCR3A = 0;
     TCCR3B = 0;
     TCNT3 = 0;
@@ -186,10 +172,10 @@ ISR(TIMER3_COMPA_vect)
       // float count = st * 16000000.00 * this->prescaler;
       int P[5] = {1, 2, 8, 256, 1024};
       long j = 0;
-      long P_FRQ = 16000000; // Processor Frequency
+      long P_FRQ = CPU_FREQ; // Processor Frequency
       long cc = 1;
-      float Feed = s.f; // 100 mm/min
-      long PPM = 200;   // 200 Pulses per Millimeter
+      float Feed = s.f;                // 100 mm/min
+      long PPM = steps_per_millimeter; // 200 Pulses per Millimeter
       unsigned long p = 1;
       long TIMER_MAX = 65536;
 
@@ -199,13 +185,11 @@ ISR(TIMER3_COMPA_vect)
       // dem Vorschub mit
       // mm/min * Pulses_Per_Millimeter / 60
       float target_frq = ((Feed * PPM) / 60.0) * 2.0;
-      // Serial.print("Target Frequency: "); Serial.println(target_frq);
 
       // Suche den richtigen Prescaler
       do
       {
         // Hole den naechsten Prescaler
-        // p = P[j];
         if (j == 0)
           p = 1;
         else if (j == 1)
@@ -247,12 +231,6 @@ ISR(TIMER3_COMPA_vect)
 
       pulses_x = longline;
       pulses_y = shortline;
-
-      // Compare Output Mode
-      // Prescaler
-      // TCCR3B |= (1 << CS31); // Prescaler 8
-      // Interrupts
-      // TCCR3B |= (1 << CS32); // Prescaler 256
 
       TCCR3B = 0;
 
@@ -348,7 +326,7 @@ volatile commEnum c = Wait;
 
 void loop()
 {
-  if(steps_per_millimeter == -1)
+  if (steps_per_millimeter == -1)
   {
     steps_per_millimeter = STEPS_PER_MILLIMETER;
   }
@@ -405,7 +383,6 @@ void loop()
   // Encoder
   if (millis() - timeold >= 1000)
   {
-    // noInterrupts();
     rpm = (60 * 1000 / pulsesperturn) / (millis() - timeold) * pulses;
     velocity = rpm * 3.1416 * wheel_diameter * 60 / 1000000;
     timeold = millis();
@@ -417,7 +394,6 @@ void loop()
     Serial.print("     ");
     Serial.println(velocity, 2);
     pulses = 0;
-    // interrupts();
   }
 #endif
 
@@ -480,7 +456,6 @@ void loop()
       break;
 
     case XYF:
-      // noInterrupts();
       token = strtok(arr, ";");
       count = 0;
       while (token != NULL && count < 20)
@@ -507,7 +482,6 @@ void loop()
         Serial.print("With \"running_flag\" of: ");
         Serial.println(running_flag);
 #endif
-        // interrupts();
       }
       else
       {
@@ -574,7 +548,7 @@ void loop()
     case STOP:
       stopAll();
       break;
-    
+
     case SPM:
       token = strtok(arr, ";");
       count = 0;
@@ -584,8 +558,9 @@ void loop()
         count++;
         token = strtok(NULL, ";");
       }
-      steps_per_millimeter = atoi(xm.str_array[1]);
-      Serial.println("ACK SPM "); Serial.println(steps_per_millimeter);
+      steps_per_millimeter = (long)atoi(xm.str_array[1]);
+      Serial.println("ACK SPM ");
+      Serial.println(steps_per_millimeter);
       break;
 
     case NO_VALID_MESSAGE:
