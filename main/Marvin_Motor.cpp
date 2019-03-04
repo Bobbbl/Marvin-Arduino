@@ -257,8 +257,8 @@ void Marvin_Steppers::bresenham(Strecke s)
   v.y = s.y;
 
   float stepsx, stepsy;
-  stepsx = abs(v.x * STEPS_PER_MILLIMETER_X);
-  stepsy = abs(v.y * STEPS_PER_MILLIMETER_Y);
+  stepsx = abs(v.x * STEPS_PER_MILLIMETER);
+  stepsy = abs(v.y * STEPS_PER_MILLIMETER);
 
   unsigned long longline, shortline;
 
@@ -397,8 +397,8 @@ void Marvin_Steppers::bresenham(Strecke s, long PPM)
   v.y = s.y;
 
   float stepsx, stepsy;
-  stepsx = abs(v.x * STEPS_PER_MILLIMETER_X);
-  stepsy = abs(v.y * STEPS_PER_MILLIMETER_Y);
+  stepsx = abs(v.x * PPM);
+  stepsy = abs(v.y * PPM);
 
   unsigned long longline, shortline;
 
