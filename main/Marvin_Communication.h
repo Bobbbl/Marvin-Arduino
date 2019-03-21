@@ -21,8 +21,8 @@ enum cE
     Z = 0x05,
     STOP = 0x06,
     NO_VALID_MESSAGE = 0x07,
-    SPM = 0x08
-    
+    SPM = 0x08,
+    KPKDKI = 0x09
     };
 typedef enum cE commEnum;
 

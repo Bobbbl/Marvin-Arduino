@@ -125,6 +125,10 @@ commEnum GetCommunicationEnum(String str)
     {
         return XYF;
     }
+    else if (str.indexOf("PID") >= 0)
+    {
+        return KPKDKI;
+    }
     else if (str.indexOf("SPM") >= 0)
     {
         return SPM;

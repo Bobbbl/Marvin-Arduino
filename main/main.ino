@@ -284,7 +284,6 @@ ISR(TIMER3_COMPA_vect)
   }
 }
 
-
 /*-------------------------------------------------------------------
 =                         Encoder                                    =
 --------------------------------------------------------------------*/
@@ -317,7 +316,6 @@ double kp = 2, kd = 5, ki = 1;
 */
 PID marvinPID(&rpm, &Output, &Setpoint, kp, ki, kd, DIRECT);
 void setAnteil(double kp, double kd, double ki);
-
 
 void setup()
 {
@@ -352,8 +350,6 @@ void setup()
 
   marvinPID.SetMode(AUTOMATIC);
 }
-
-
 
 /*-------------------------------------------------------------------
 =                         Others                                    =
@@ -397,7 +393,6 @@ void loop()
     Freached = -1;
   }
 
-
   /*-------------------Encoder--------------------------------------*/
 #if ENCODER_ADVANCED
 
@@ -436,10 +431,6 @@ void loop()
     Serial.print("     ");
     Serial.println(velocity, 2);
     pulses = 0;
-  Serial.println(Output);
-  Serial.println(Setpoint);
-  // Serial.println(Output);
-
   }
 #endif
 
@@ -464,6 +455,26 @@ void loop()
 
     switch (c)
     {
+    case KPKDKI:
+      token = strtok(arr, ";");
+      count = 0;
+      while (token != NULL && count < 20)
+      {
+        strcpy(xm.str_array[count], token);
+        count++;
+        token = strtok(NULL, ";");
+      }
+      kp = (float)atof(xm.str_array[1]);
+      kd = (float)atof(xm.str_array[2]);
+      ki = (float)atof(xm.str_array[3]);
+      setAnteil(kp, kd, ki);
+      Serial.print("ACK PID ");
+      Serial.print(kp);
+      Serial.print(" ");
+      Serial.print(kd);
+      Serial.print(" ");
+      Serial.println(ki);
+      break;
     case P:
       token = strtok(arr, ";");
       count = 0;
@@ -483,8 +494,8 @@ void loop()
       Serial.print("ACK P ");
       Serial.println(p);
       break;
-    
-    case CS:  // Geregelt Spindelinput
+
+    case CS: // Geregelt Spindelinput
       token = strtok(arr, ";");
       count = 0;
       while (token != NULL && count < 20)
@@ -494,8 +505,9 @@ void loop()
         token = strtok(NULL, ";");
       }
       Setpoint = atoi(xm.str_array[1]);
-      Serial.println(xm.str_array[1]);
       marvinPID.SetMode(AUTOMATIC);
+      Serial.print("ACK CS ");
+      Serial.println(Setpoint);
       break;
 
     case S:
