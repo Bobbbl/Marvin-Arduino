@@ -15,12 +15,13 @@ enum cE
 {
     XYF = 0x00,
     S = 0x01,
-    P = 0x02,
-    Wait = 0x03,
-    Z = 0x04,
-    STOP = 0x05,
-    NO_VALID_MESSAGE = 0x06,
-    SPM = 0x07
+    CS = 0x02,
+    P = 0x03,
+    Wait = 0x04,
+    Z = 0x05,
+    STOP = 0x06,
+    NO_VALID_MESSAGE = 0x07,
+    SPM = 0x08
     
     };
 typedef enum cE commEnum;

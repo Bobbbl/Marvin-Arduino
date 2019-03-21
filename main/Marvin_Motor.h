@@ -81,6 +81,7 @@ public:
   void setRichtung(Richtung);
   Richtung getRichtung();
   void startMotor(Richtung richtung, int speed);
+  void startMotorRPM(Richtung richtung, double rpm);
   void stopMotor();
   int changeSpeed(uint8_t speed);
 

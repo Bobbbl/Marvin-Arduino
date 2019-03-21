@@ -835,6 +835,12 @@ int Spindel::changeSpeed(uint8_t speed)
   analogWrite(PWM3, percent);
 }
 
+void Spindel::startMotorRPM(Richtung richtung, double pwm)
+{
+  setRichtung(richtung);
+  analogWrite(PWM3, pwm);
+}
+
 void Spindel::stopMotor()
 {
   analogWrite(PWM3, 0);

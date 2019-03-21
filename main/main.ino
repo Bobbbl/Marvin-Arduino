@@ -2,6 +2,7 @@
 #include "Marvin_Communication.h"
 #include "Marvin_Motor.h"
 #include "Druckpumpe.h"
+#include <PID_v1.h>
 #include <string.h>
 // #define ENCODER_OPTIMIZE_INTERRUPTS
 // #include <Encoder.h>
@@ -37,6 +38,10 @@ uint8_t endschalter_flag_x = 0, endschalter_flag_y = 0;
 Marvin_Steppers stepper_motors(PWM1, PWM2, DIR1, DIR2);
 Spindel spindel;
 PressurePump pump;
+
+/*-------------------------------------------------------------------
+=                         ISR                                       =
+--------------------------------------------------------------------*/
 
 ISR(TIMER3_COMPA_vect)
 {
@@ -279,14 +284,40 @@ ISR(TIMER3_COMPA_vect)
   }
 }
 
+
+/*-------------------------------------------------------------------
+=                         Encoder                                    =
+--------------------------------------------------------------------*/
 volatile int encoder_pin = 2;
-volatile float rpm = 0.0;
+double rpm = 0.0; // !!!
 volatile float velocity = 0;
 volatile long pulses = 0;
 volatile unsigned long timeold = 0;
 volatile unsigned int pulsesperturn = 1;
 const int wheel_diameter = 24;
 static volatile unsigned long debounce = 0;
+
+/*-------------------------------------------------------------------
+=                         Regler                                    =
+--------------------------------------------------------------------*/
+double Setpoint, Input = 0, Output;
+double kp = 2, kd = 5, ki = 1;
+/*Signature:
+  
+  PID(&Input, &Output, &Setpoint, Kp, Ki, Kd, Direction)
+  PID(&Input, &Output, &Setpoint, Kp, Ki, Kd, POn, Direction)
+  
+  Input: The variable we're trying to control (double)
+  Output: The variable that will be adjusted by the pid (double)
+  Setpoint: The value we want to Input to maintain (double)
+  Kp, Ki, Kd: Tuning Parameters. these affect how the pid will change the output. (double>=0)
+  Direction: Either DIRECT or REVERSE. determines which direction the output will move when faced with a given error. DIRECT is most common.
+  POn: Either P_ON_E (Default) or P_ON_M. Allows Proportional on Measurement to be specified.
+
+*/
+PID marvinPID(&rpm, &Output, &Setpoint, kp, ki, kd, DIRECT);
+void setAnteil(double kp, double kd, double ki);
+
 
 void setup()
 {
@@ -318,17 +349,27 @@ void setup()
   timeold = 0;
   attachInterrupt(digitalPinToInterrupt(ENCODER_PIN), counter, RISING);
   pinMode(ENCODER_PIN, INPUT);
+
+  marvinPID.SetMode(AUTOMATIC);
 }
 
+
+
+/*-------------------------------------------------------------------
+=                         Others                                    =
+--------------------------------------------------------------------*/
 long positionLeft = -999;
 volatile commEnum c = Wait;
 
 void loop()
 {
+
   if (steps_per_millimeter == -1)
   {
     steps_per_millimeter = STEPS_PER_MILLIMETER;
   }
+
+  /*-------------------Limit Switches-------------------------------*/
 #if LIMIT_SWITCH1
   if (!digitalRead(LIM1))
   {
@@ -356,6 +397,8 @@ void loop()
     Freached = -1;
   }
 
+
+  /*-------------------Encoder--------------------------------------*/
 #if ENCODER_ADVANCED
 
   long newpos;
@@ -382,8 +425,8 @@ void loop()
   // Encoder
   if (millis() - timeold >= 1000)
   {
-    rpm = (60 * 1000 / pulsesperturn) / (millis() - timeold) * pulses;
-    velocity = rpm * 3.1416 * wheel_diameter * 60 / 1000000;
+    rpm = (60.0 * 1000.0 / pulsesperturn) / (millis() - timeold) * pulses;
+    velocity = rpm * 3.1416 * wheel_diameter * 60.0 / 1000000.0;
     timeold = millis();
     Serial.print(millis() / 1000);
     Serial.print("       ");
@@ -393,9 +436,16 @@ void loop()
     Serial.print("     ");
     Serial.println(velocity, 2);
     pulses = 0;
+  Serial.println(Output);
+  Serial.println(Setpoint);
+  // Serial.println(Output);
+
   }
 #endif
 
+  /*-------------------Regler--------------------------------------*/
+  marvinPID.Compute();
+  spindel.startMotorRPM(rechts, Output);
   // Toolpath Points
   String m;
   struct StringArray xm;
@@ -433,7 +483,23 @@ void loop()
       Serial.print("ACK P ");
       Serial.println(p);
       break;
+    
+    case CS:  // Geregelt Spindelinput
+      token = strtok(arr, ";");
+      count = 0;
+      while (token != NULL && count < 20)
+      {
+        strcpy(xm.str_array[count], token);
+        count++;
+        token = strtok(NULL, ";");
+      }
+      Setpoint = atoi(xm.str_array[1]);
+      Serial.println(xm.str_array[1]);
+      marvinPID.SetMode(AUTOMATIC);
+      break;
+
     case S:
+      marvinPID.SetMode(MANUAL);
       token = strtok(arr, ";");
       count = 0;
       while (token != NULL && count < 20)
@@ -606,4 +672,12 @@ void stopAll()
   running_flag = false;
   // Reset REACHED Flag
   REACHED = false;
+}
+
+void setAnteil(double Kp, double Kd, double Ki)
+{
+  kp = Kp;
+  kd = Kd;
+  ki = Ki;
+  marvinPID.SetTunings(kp, kd, ki);
 }

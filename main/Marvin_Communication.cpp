@@ -133,6 +133,10 @@ commEnum GetCommunicationEnum(String str)
     {
         return STOP;
     }
+    else if(str.indexOf("CS") >= 0)
+    {
+        return CS;
+    }
     else if (str.indexOf("S") >= 0)
     {
         return S;
