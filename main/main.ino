@@ -79,9 +79,9 @@ ISR(TIMER3_COMPA_vect)
     TCNT3 = 0;
     pulses_x = 0;
 
+     REACHED = true;
     if (pnumber > 0)
     {
-      REACHED = true;
       Strecke s;
       s.x = nextX[0];
       s.y = nextY[0];
@@ -291,7 +291,7 @@ volatile int encoder_pin = 2;
 double rpm = 0.0; // !!!
 volatile float velocity = 0;
 volatile long pulses = 0;
-volatile unsigned long timeold = 0;
+volatile unsigned long timeold = 0, timeold2 = 0;
 volatile unsigned int pulsesperturn = 1;
 const int wheel_diameter = 24;
 static volatile unsigned long debounce = 0;
@@ -326,6 +326,7 @@ void setup()
   while (!Serial)
     pinMode(PWM1, OUTPUT);
   pinMode(PWM2, OUTPUT);
+  pinMode(PWM3, OUTPUT);
   pinMode(DIR1, OUTPUT);
   pinMode(DIR2, OUTPUT);
   pinMode(DIR3, OUTPUT);
@@ -338,17 +339,20 @@ void setup()
   // stepper_motors.stopTimer3();
   // stepper_motors.stopTimer4();
   spindel.setRichtung(keine);
-  digitalWrite(RELAY_IN4, HIGH);
+  digitalWrite(RELAY_IN4, LOW);
   pinMode(IN3, OUTPUT);
   pinMode(IN4, OUTPUT);
 
   pulses = 0;
   rpm = 0;
   timeold = 0;
+  timeold2 = 0;
   attachInterrupt(digitalPinToInterrupt(ENCODER_PIN), counter, RISING);
   pinMode(ENCODER_PIN, INPUT);
 
   marvinPID.SetMode(AUTOMATIC);
+  marvinPID.SetOutputLimits(0, 255);
+  marvinPID.SetSampleTime(10);
 }
 
 /*-------------------------------------------------------------------
@@ -359,6 +363,7 @@ volatile commEnum c = Wait;
 
 void loop()
 {
+  
 
   if (steps_per_millimeter == -1)
   {
@@ -418,25 +423,36 @@ void loop()
 
 #if ENCODER
   // Encoder
-  if (millis() - timeold >= 1000)
+
+
+  if(millis() - timeold2 >= 100)
   {
-    rpm = (60.0 * 1000.0 / pulsesperturn) / (millis() - timeold) * pulses;
-    velocity = rpm * 3.1416 * wheel_diameter * 60.0 / 1000000.0;
-    timeold = millis();
-    Serial.print(millis() / 1000);
+    rpm = (pulses * 60.0 * 0.5*10);
+    Serial.print(millis() / 100);
     Serial.print("       ");
     Serial.print(rpm, DEC);
     Serial.print("   ");
     Serial.print(pulses, DEC);
     Serial.print("     ");
     Serial.println(velocity, 2);
-    pulses = 0;
+    timeold2 = millis();
   }
 #endif
-
+  if (millis() - timeold >= 10)
+  {
+    // rpm = (60.0 * 1000.0 / pulsesperturn) / (millis() - timeold) * pulses;
+    rpm = (pulses * 60.0 * 0.5*1000);
+    velocity = rpm * 3.1416 * wheel_diameter * 60.0 / 1000000.0;
+    timeold = millis();
+    
+    pulses = 0;
+  }
   /*-------------------Regler--------------------------------------*/
+
   marvinPID.Compute();
   spindel.startMotorRPM(rechts, Output);
+  //analogWrite(PWM3, 200);
+  //digitalWrite(41, HIGH);
   // Toolpath Points
   String m;
   struct StringArray xm;
