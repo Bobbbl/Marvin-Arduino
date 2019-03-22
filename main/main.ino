@@ -288,10 +288,10 @@ ISR(TIMER3_COMPA_vect)
 =                         Encoder                                    =
 --------------------------------------------------------------------*/
 volatile int encoder_pin = 2;
-volatile double rpm = 0.0; // !!!
+double rpm = 0.0; // !!!
 volatile float velocity = 0;
 volatile long pulses = 0;
-volatile unsigned long timeold = 0, timeold2 = 0, timeold2_old = 0;
+volatile unsigned long timeold = 0;
 volatile unsigned int pulsesperturn = 1;
 const int wheel_diameter = 24;
 static volatile unsigned long debounce = 0;
@@ -299,9 +299,8 @@ static volatile unsigned long debounce = 0;
 /*-------------------------------------------------------------------
 =                         Regler                                    =
 --------------------------------------------------------------------*/
-double Setpoint = 0, Input = 0, Output;
-double kp = 1, kd = 1, ki = 1;
-uint8_t dirtyflag = 0;
+double Setpoint, Input = 0, Output;
+double kp = 2, kd = 5, ki = 1;
 /*Signature:
   
   PID(&Input, &Output, &Setpoint, Kp, Ki, Kd, Direction)
@@ -351,7 +350,6 @@ void setup()
 
   marvinPID.SetMode(AUTOMATIC);
   marvinPID.SetOutputLimits(0, 150);
-  marvinPID.SetSampleTime(1);
 }
 
 /*-------------------------------------------------------------------
@@ -362,10 +360,6 @@ volatile commEnum c = Wait;
 
 void loop()
 {
-  if(dirtyflag == 0)
-  {
-    Setpoint = 0;
-  }
 
   if (steps_per_millimeter == -1)
   {
@@ -425,21 +419,11 @@ void loop()
 
 #if ENCODER
   // Encoder
-
-  if (millis() - timeold >= 10)
+  if (millis() - timeold >= 1000)
   {
-      rpm = (60.0 * 1000.0 / pulsesperturn) / (millis() - timeold) * pulses;
+    rpm = (60.0 * 1000.0 / pulsesperturn) / (millis() - timeold) * pulses;
     velocity = rpm * 3.1416 * wheel_diameter * 60.0 / 1000000.0;
     timeold = millis();
-    pulses = 0;
-    if(pulses >= 10)
-    {
-      pulses = 0;
-    }
-  }
-
-  if(millis() - timeold2 >= 1000)
-  {
     Serial.print(millis() / 1000);
     Serial.print("       ");
     Serial.print(rpm, DEC);
@@ -447,17 +431,11 @@ void loop()
     Serial.print(pulses, DEC);
     Serial.print("     ");
     Serial.println(velocity, 2);
-    timeold2 = millis();
+    pulses = 0;
   }
 #endif
 
   /*-------------------Regler--------------------------------------*/
-  // rpm = (60.0 * 1000.0 / pulsesperturn) / (millis() - timeold2) * pulses;
-  // if(timeold2 != timeold2_old)
-  // {
-  //   Serial.println()
-  // }
-  // timeold2 = millis();
   marvinPID.Compute();
   spindel.startMotorRPM(rechts, Output);
   // Toolpath Points
@@ -519,7 +497,6 @@ void loop()
       break;
 
     case CS: // Geregelt Spindelinput
-      dirtyflag = 1;
       token = strtok(arr, ";");
       count = 0;
       while (token != NULL && count < 20)
