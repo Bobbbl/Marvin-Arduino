@@ -349,6 +349,7 @@ void setup()
   pinMode(ENCODER_PIN, INPUT);
 
   marvinPID.SetMode(AUTOMATIC);
+  marvinPID.SetOutputLimits(0, 150);
 }
 
 /*-------------------------------------------------------------------
