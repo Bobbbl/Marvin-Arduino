@@ -289,6 +289,7 @@ ISR(TIMER3_COMPA_vect)
 --------------------------------------------------------------------*/
 volatile int encoder_pin = 2;
 double rpm = 0.0; // !!!
+double rpm_regler = rpm;
 volatile float velocity = 0;
 volatile long pulses = 0;
 volatile unsigned long timeold = 0, timeold2 = 0;
@@ -314,7 +315,7 @@ double kp = 2, kd = 5, ki = 1;
   POn: Either P_ON_E (Default) or P_ON_M. Allows Proportional on Measurement to be specified.
 
 */
-PID marvinPID(&rpm, &Output, &Setpoint, kp, ki, kd, DIRECT);
+PID marvinPID(&rpm_regler, &Output, &Setpoint, kp, ki, kd, DIRECT);
 void setAnteil(double kp, double kd, double ki);
 
 void setup()
@@ -438,6 +439,7 @@ void loop()
     timeold2 = millis();
   }
 #endif
+  rpm_regler = rpm;
   if (millis() - timeold >= 10)
   {
     // rpm = (60.0 * 1000.0 / pulsesperturn) / (millis() - timeold) * pulses;
@@ -451,8 +453,7 @@ void loop()
 
   marvinPID.Compute();
   spindel.startMotorRPM(rechts, Output);
-  //analogWrite(PWM3, 200);
-  //digitalWrite(41, HIGH);
+  
   // Toolpath Points
   String m;
   struct StringArray xm;
