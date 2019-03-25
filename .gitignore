@@ -8,3 +8,8 @@
 .vs/Marvin-Arduino/v15/.suo
 .vs/ProjectSettings.json
 /build
+*.vcxproj
+*.filters
+*.user
+main/__vm
+main/Debug
