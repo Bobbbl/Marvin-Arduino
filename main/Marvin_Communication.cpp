@@ -396,6 +396,7 @@ uint8_t runCommand(Commando com, PressurePump *pump, Spindel *spindel, Marvin_St
 		Setpoint = com.T1;
 		return 1;
 	case P:
+		/*Start Motor mit */
 		pump->startMotor(com.T1);
 		return 1;
 	case Wait:
@@ -420,9 +421,11 @@ uint8_t runCommand(Commando com, PressurePump *pump, Spindel *spindel, Marvin_St
 		stepper_motors->stopMotors();
 		return 1;
 	case SPM:
+		/*Set Steps per millimeter (extern variable)*/
 		steps_per_millimeter = com.T1;
 		return 1;
 	case XYF:
+		/*Start Breshenham (Timer 3)*/
 		Strecke s;
 		s.x = com.T1;
 		s.y = com.T2;
@@ -430,12 +433,20 @@ uint8_t runCommand(Commando com, PressurePump *pump, Spindel *spindel, Marvin_St
 		stepper_motors->bresenham(s, steps_per_millimeter);
 		return 0;
 	case KPKDKI:
+		/*
+		Setze Anteile für PID Regler in Reihenfolge
+		Proportionalanteil
+		Differentialanteil
+		Integralanteil
+		*/
 		setAnteil(com.T1, com.T2, com.T3);
 		return 1;
 	case NO_VALID_MESSAGE:
+		/*Keine bekannte Message wurde gesendet - Gib -1 zurück*/
 		return -1;
 		break;
 	default:
+		/*Zur Sicherheit, falls doch einmal etwas schief gehen sollte*/
 		return -1;
 		break;
 	}
