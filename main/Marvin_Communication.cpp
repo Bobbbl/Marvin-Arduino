@@ -2,6 +2,8 @@
 #include "Arduino.h"
 #define DEBUG
 
+extern volatile long steps_per_millimeter;
+
 String Sanchezcomm_dict[COMM_LENGTH] = {
 	"__Start_Session__",
 	"__End_Session__",
@@ -369,4 +371,73 @@ void sendACK(commEnum c, Commando com)
 		break;
 	}
 		Serial.println();
+}
+
+void setAnteil(double Kp, double Kd, double Ki, PID *marvinPID)
+{
+	kp = Kp;
+	kd = Kd;
+	ki = Ki;
+	marvinPID->SetTunings(kp, kd, ki);
+}
+
+// Returns  1 for successfull command
+//			0 for waiting for completion
+//			-1 for not successfull completion
+uint8_t runCommand(Commando com, PressurePump *pump, Spindel *spindel, Marvin_Steppers *stepper_motors)
+{
+	static long timeold = millis();
+
+
+	switch (LastCommand->Command)
+	{
+	case CS:
+		marvinPID.SetMode(AUTOMATIC);
+		Setpoint = com.T1;
+		return 1;
+	case P:
+		pump->startMotor(com.T1);
+		return 1;
+	case Wait:
+		break;
+	case Z:
+		if (com.T1 == 0)
+		{
+			digitalWrite(RELAY_IN4, HIGH);
+		}
+		else
+		{
+			digitalWrite(RELAY_IN4, LOW);
+		}
+		return 1;
+		break;
+	case STOP:
+		/*Stop Spindel*/
+		spindel->stopMotor();
+		/*Stop Pump*/
+		pump->stopMotor();
+		/*Stop Stepper Motors*/
+		stepper_motors->stopMotors();
+		return 1;
+	case SPM:
+		steps_per_millimeter = com.T1;
+		return 1;
+	case XYF:
+		Strecke s;
+		s.x = com.T1;
+		s.y = com.T2;
+		s.f = com.T3;
+		stepper_motors->bresenham(s, steps_per_millimeter);
+		return 0;
+	case KPKDKI:
+		setAnteil(com.T1, com.T2, com.T3);
+		return 1;
+	case NO_VALID_MESSAGE:
+		return -1;
+		break;
+	default:
+		return -1;
+		break;
+	}
+
 }

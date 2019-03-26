@@ -9,6 +9,7 @@
 #define dict_length 20
 #define MESSAGE_TIMEOUT (unsigned long)5000  // Timeout in ms
 
+
 using namespace std;
 
 // Capsulate up to 10 Strings in this Struct
@@ -75,6 +76,8 @@ void sendReceiveSuccessfull();
 void sendPointReached();
 void sendACK(commEnum c, Commando com);
 Commando createCommand(commEnum c, StringArray xm);
+uint8_t runCommand(Commando com, PressurePump *pump, Spindel *spindel, Marvin_Steppers *stepper_motors);
+void setAnteil(double kp, double kd, double ki);
 
 
 struct StringArray getValueInArray(String data, char separator);

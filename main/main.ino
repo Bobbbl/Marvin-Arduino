@@ -95,7 +95,7 @@ double kp = 2, kd = 5, ki = 1;
 
 */
 PID marvinPID(&rpm_regler, &Output, &Setpoint, kp, ki, kd, DIRECT);
-void setAnteil(double kp, double kd, double ki);
+
 
 /*-------------------------------------------------------------------
 =                         Others                                    =
@@ -292,12 +292,11 @@ void loop()
 
 		/*Add it to Message Queue*/
 		*(LastCommand++) = com;	// Write to End of Message Queue and increment pointer
+	}	
 
-		int s = (LastCommand - &MessageQueue[0]);
-		int scom = sizeof(com);
-		count = s / scom;
+	/*Manage Commands*/
 
-	}
+
 }
 
 void counter()
@@ -328,10 +327,4 @@ void stopAll()
 	REACHED = false;
 }
 
-void setAnteil(double Kp, double Kd, double Ki)
-{
-	kp = Kp;
-	kd = Kd;
-	ki = Ki;
-	marvinPID.SetTunings(kp, kd, ki);
-}
+
