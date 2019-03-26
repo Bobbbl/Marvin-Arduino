@@ -11,30 +11,45 @@
 
 using namespace std;
 
-enum cE 
+// Capsulate up to 10 Strings in this Struct
+struct StringArray {
+	int count = 0;
+	char str_array[10][20];
+};
+
+enum cE
 {
-    XYF = 0x00,
-    S = 0x01,
-    CS = 0x02,
-    P = 0x03,
-    Wait = 0x04,
-    Z = 0x05,
-    STOP = 0x06,
-    NO_VALID_MESSAGE = 0x07,
-    SPM = 0x08,
-    KPKDKI = 0x09
-    };
+	XYF = 0x00,
+	S = 0x01,
+	CS = 0x02,
+	P = 0x03,
+	Wait = 0x04,
+	Z = 0x05,
+	STOP = 0x06,
+	NO_VALID_MESSAGE = 0x07,
+	SPM = 0x08,
+	KPKDKI = 0x09
+};
 typedef enum cE commEnum;
 
-typedef enum {Start_Session = 0, 
-End_Session = 1,
-Start_Homing = 2,
-Send_Toolpath = 3,
-Empfang_Bestaetigt = 4,
-Receive_Error = 5,
-Receive_Successfull = 6,
-Point_Reached = 7,
-No_Message = -1
+typedef struct
+{
+	commEnum Command;
+	double T1;
+	double T2;
+	double T3;
+}Commando;
+
+typedef enum {
+	Start_Session = 0,
+	End_Session = 1,
+	Start_Homing = 2,
+	Send_Toolpath = 3,
+	Empfang_Bestaetigt = 4,
+	Receive_Error = 5,
+	Receive_Successfull = 6,
+	Point_Reached = 7,
+	No_Message = -1
 }communication_alphabet;
 
 #define COMM_LENGTH 8
@@ -58,12 +73,10 @@ void sendEndSession();
 void SanchezsendError();
 void sendReceiveSuccessfull();
 void sendPointReached();
+void sendACK(commEnum c, Commando com);
+Commando createCommand(commEnum c, StringArray xm);
 
-// Capsulate up to 10 Strings in this Struct
-struct StringArray{
-    int count = 0;
-    char str_array[10][20];
-};
+
 struct StringArray getValueInArray(String data, char separator);
 commEnum GetCommunicationEnum(String str);
 
