@@ -26,8 +26,8 @@
 /*-------------------------------------------------------------------
 =                         Message Queue                             =
 --------------------------------------------------------------------*/
-volatile Commando MessageQueue[100];
-volatile Commando *LastCommand;
+Commando MessageQueue[100];
+Commando *EndOfMessageQueue;
 
 
 
@@ -217,7 +217,7 @@ void setup()
 
 	/*Set Last Message Pointer to first Element of Message Queue
 	'cause it's still empty*/
-	LastCommand = &MessageQueue[0];
+	EndOfMessageQueue = &MessageQueue[0];
 }
 
 
@@ -291,11 +291,16 @@ void loop()
 		sendACK(c, com);
 
 		/*Add it to Message Queue*/
-		*(LastCommand++) = com;	// Write to End of Message Queue and increment pointer
+		*(EndOfMessageQueue++) = com;	// Write to End of Message Queue and increment pointer
 	}	
 
 	/*Manage Commands*/
+	uint8_t comval = runCommand(MessageQueue[0], &pump, &spindel, &stepper_motors, &marvinPID);
 
+	if (comval == 1)
+	{
+		EndOfMessageQueue--;
+	}
 
 }
 

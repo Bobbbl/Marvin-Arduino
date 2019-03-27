@@ -1,8 +1,12 @@
 #include "Marvin_Communication.h"
 #include "Arduino.h"
+
+
 #define DEBUG
 
 extern volatile long steps_per_millimeter;
+extern double Setpoint;
+extern bool running_flag;
 
 String Sanchezcomm_dict[COMM_LENGTH] = {
 	"__Start_Session__",
@@ -375,32 +379,38 @@ void sendACK(commEnum c, Commando com)
 
 void setAnteil(double Kp, double Kd, double Ki, PID *marvinPID)
 {
-	kp = Kp;
+	/*kp = Kp;
 	kd = Kd;
-	ki = Ki;
-	marvinPID->SetTunings(kp, kd, ki);
+	ki = Ki;*/
+	marvinPID->SetTunings(Kp, Kd, Ki);
 }
 
 // Returns  1 for successfull command
 //			0 for waiting for completion
 //			-1 for not successfull completion
-uint8_t runCommand(Commando com, PressurePump *pump, Spindel *spindel, Marvin_Steppers *stepper_motors)
+uint8_t runCommand(Commando com, PressurePump *pump, Spindel *spindel, Marvin_Steppers *stepper_motors, PID *marvinPID)
 {
 	static long timeold = millis();
+	static uint8_t running = false;
 
 
-	switch (LastCommand->Command)
+
+	switch (com.Command)
 	{
+	case Wait:
+		if (millis() - timeold >= com.T1)
+		{
+			return 1;
+		}
+		return 0;
 	case CS:
-		marvinPID.SetMode(AUTOMATIC);
+		marvinPID->SetMode(AUTOMATIC);
 		Setpoint = com.T1;
 		return 1;
 	case P:
 		/*Start Motor mit */
 		pump->startMotor(com.T1);
 		return 1;
-	case Wait:
-		break;
 	case Z:
 		if (com.T1 == 0)
 		{
@@ -425,12 +435,28 @@ uint8_t runCommand(Commando com, PressurePump *pump, Spindel *spindel, Marvin_St
 		steps_per_millimeter = com.T1;
 		return 1;
 	case XYF:
+		/*Wenn Toolpath noch nicht erreicht wurde, dann 
+		dann gib eine 0 zurück und lass den Pointer nicht
+		weiter wandern. Damit wird immer wieder der geliche 
+		Befehl ausgeführt, bis running_flag == true*/
+		if (running == true)
+		{
+			if (running_flag == false)
+			{
+				/*Der Toolpath wurde noch nicht erreicht*/
+				running = false;
+				return 1;
+			}
+			
+			return 0;
+		}
 		/*Start Breshenham (Timer 3)*/
 		Strecke s;
 		s.x = com.T1;
 		s.y = com.T2;
 		s.f = com.T3;
 		stepper_motors->bresenham(s, steps_per_millimeter);
+		running_flag = true;
 		return 0;
 	case KPKDKI:
 		/*
@@ -439,7 +465,7 @@ uint8_t runCommand(Commando com, PressurePump *pump, Spindel *spindel, Marvin_St
 		Differentialanteil
 		Integralanteil
 		*/
-		setAnteil(com.T1, com.T2, com.T3);
+		setAnteil(com.T1, com.T2, com.T3, marvinPID);
 		return 1;
 	case NO_VALID_MESSAGE:
 		/*Keine bekannte Message wurde gesendet - Gib -1 zurück*/
