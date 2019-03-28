@@ -218,6 +218,12 @@ void setup()
 	/*Set Last Message Pointer to first Element of Message Queue
 	'cause it's still empty*/
 	EndOfMessageQueue = &MessageQueue[0];
+	Commando com;
+	com.Command = NO_VALID_MESSAGE;
+	com.T1 = -1;
+	com.T2 = -1;
+	com.T3 = -1;
+	*EndOfMessageQueue = com;
 }
 
 
@@ -262,6 +268,7 @@ void loop()
 	char *token;
 	int count = 0;
 	struct StringArray xm;
+	uint8_t comval = 0;
 	while (checkConnection() > 0)
 	{
 		/*Read New Message Until it reaches "@" or
@@ -270,6 +277,7 @@ void loop()
 
 		/*Check if and which command was sent*/
 		c = GetCommunicationEnum(m);
+
 		m.toCharArray(arr, 20);
 
 		/*Split Message in Parts of ; and save it in
@@ -277,9 +285,9 @@ void loop()
 		token = strtok(arr, ";");	// Get first Token
 
 		xm.count = 0;
-		while (token != NULL && count < 20)
+		while (token != NULL && xm.count < 20)
 		{
-			strcpy(xm.str_array[count], token);
+			strcpy(xm.str_array[xm.count], token);
 			xm.count++;
 			token = strtok(NULL, ";");
 		}
@@ -290,16 +298,38 @@ void loop()
 		/*Send Appropriate ACK*/
 		sendACK(c, com);
 
+		/*Skip if No Valid Message Was Sent*/
+		if (c == NO_VALID_MESSAGE)
+		{
+			continue;
+		}
+
 		/*Add it to Message Queue*/
 		*(EndOfMessageQueue++) = com;	// Write to End of Message Queue and increment pointer
-	}	
+	}
 
 	/*Manage Commands*/
-	uint8_t comval = runCommand(MessageQueue[0], &pump, &spindel, &stepper_motors, &marvinPID);
-
-	if (comval == 1)
+	if (MessageQueue[0].Command != NO_VALID_MESSAGE)
 	{
-		EndOfMessageQueue--;
+		comval = runCommand(MessageQueue[0], &pump, &spindel, &stepper_motors, &marvinPID);
+
+		if (comval == 1)
+		{
+			while (true)
+			{
+
+			}
+
+			Serial.println("Done");
+			EndOfMessageQueue--;
+			Commando com;
+			com.Command = NO_VALID_MESSAGE;
+			com.T1 = -1;
+			com.T2 = -1;
+			com.T3 = -1;
+			*EndOfMessageQueue = com;
+
+		}
 	}
 
 }

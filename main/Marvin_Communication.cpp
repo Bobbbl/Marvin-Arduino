@@ -159,6 +159,10 @@ commEnum GetCommunicationEnum(String str)
 	{
 		return Z;
 	}
+	else if (str.indexOf("Wait") >= 0)
+	{
+		return Wait;
+	}
 	else
 	{
 		return NO_VALID_MESSAGE;
@@ -357,24 +361,38 @@ Commando createCommand(commEnum c, StringArray xm)
 
 void sendACK(commEnum c, Commando com)
 {
-	Serial.print("ACK");
 	switch (c)
 	{
 	case XYF:
+		Serial.print("ACK");
+
+		Serial.print(" ");
 		Serial.print(com.T1);
+		Serial.print(" ");
 		Serial.print(com.T2);
-		Serial.print(com.T3);
+		Serial.print(" ");
+		Serial.println(com.T3);
 		break;
 	case KPKDKI:
+		Serial.print("ACK");
+
+		Serial.print(" ");
 		Serial.print(com.T1);
+		Serial.print(" ");
 		Serial.print(com.T2);
-		Serial.print(com.T3);
+		Serial.print(" ");
+		Serial.println(com.T3);
 		break;
+	case NO_VALID_MESSAGE:
+		Serial.println("NACK");
 	default:
-		Serial.print(com.T1);
+		Serial.print("ACK");
+
+		Serial.print(" ");
+		Serial.println(com.T1);
 		break;
 	}
-		Serial.println();
+	Serial.println();
 }
 
 void setAnteil(double Kp, double Kd, double Ki, PID *marvinPID)
@@ -391,18 +409,30 @@ void setAnteil(double Kp, double Kd, double Ki, PID *marvinPID)
 uint8_t runCommand(Commando com, PressurePump *pump, Spindel *spindel, Marvin_Steppers *stepper_motors, PID *marvinPID)
 {
 	static long timeold = millis();
-	static uint8_t running = false;
-
+	static bool running = false;
 
 
 	switch (com.Command)
 	{
 	case Wait:
-		if (millis() - timeold >= com.T1)
+
+		if (running)
 		{
-			return 1;
+			if (millis() - timeold >= com.T1)
+			{
+				String answer = String("Delay Ended");
+				Serial.println(answer);
+				running = false;
+				return 1;
+			}
+			return 0;
 		}
-		return 0;
+		else
+		{
+			running = true;
+			timeold = millis();
+			return 0;
+		}
 	case CS:
 		marvinPID->SetMode(AUTOMATIC);
 		Setpoint = com.T1;
@@ -435,9 +465,9 @@ uint8_t runCommand(Commando com, PressurePump *pump, Spindel *spindel, Marvin_St
 		steps_per_millimeter = com.T1;
 		return 1;
 	case XYF:
-		/*Wenn Toolpath noch nicht erreicht wurde, dann 
+		/*Wenn Toolpath noch nicht erreicht wurde, dann
 		dann gib eine 0 zurück und lass den Pointer nicht
-		weiter wandern. Damit wird immer wieder der geliche 
+		weiter wandern. Damit wird immer wieder der geliche
 		Befehl ausgeführt, bis running_flag == true*/
 		if (running == true)
 		{
@@ -445,10 +475,10 @@ uint8_t runCommand(Commando com, PressurePump *pump, Spindel *spindel, Marvin_St
 			{
 				/*Der Toolpath wurde noch nicht erreicht*/
 				running = false;
-				return 1;
+				return 0;
 			}
-			
-			return 0;
+			Serial.println("Reached");
+			return 1;
 		}
 		/*Start Breshenham (Timer 3)*/
 		Strecke s;
@@ -466,15 +496,16 @@ uint8_t runCommand(Commando com, PressurePump *pump, Spindel *spindel, Marvin_St
 		Integralanteil
 		*/
 		setAnteil(com.T1, com.T2, com.T3, marvinPID);
+		Serial.println("KPKDKI");
 		return 1;
 	case NO_VALID_MESSAGE:
 		/*Keine bekannte Message wurde gesendet - Gib -1 zurück*/
+		Serial.println("No Valid Message");
 		return -1;
-		break;
 	default:
 		/*Zur Sicherheit, falls doch einmal etwas schief gehen sollte*/
+		Serial.println("Default");
 		return -1;
-		break;
 	}
 
 }
