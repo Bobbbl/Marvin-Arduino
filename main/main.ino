@@ -43,7 +43,7 @@ extern volatile unsigned long pulses_x, pulses_y;
 bool running_flag, REACHED = false;
 volatile float nextX[100], nextY[100], nextF[100], Xreached, Yreached, Freached;
 volatile uint8_t pnumber = 0;
-volatile long steps_per_millimeter = (long)-1;
+volatile long steps_per_millimeter = (long)400;
 
 /*-------------------------------------------------------------------
 =                         Endschalter                               =
@@ -220,18 +220,27 @@ void setup()
 	EndOfMessageQueue = &MessageQueue[0];
 	Commando com;
 	com.Command = NO_VALID_MESSAGE;
-	com.T1 = -1;
-	com.T2 = -1;
-	com.T3 = -1;
-	*EndOfMessageQueue = com;
+	com.T1 = -1.0;
+	com.T2 = -1.0;
+	com.T3 = -1.0;
+	for (int i = 0; i < sizeof(MessageQueue) / sizeof(MessageQueue[0]); i++)
+	{
+		MessageQueue[i] = com;
+	}
 }
 
 
 
 void loop()
 {
+	static unsigned long pulses_x_old = 0;
+	if (pulses_x != pulses_x_old)
+	{
+		Serial.println(pulses_x);
+		pulses_x_old = pulses_x;
+	}
 	/*Read Encoder*/
-	if (millis() - timeold_serial >= 1000)
+	if (millis() - timeold_serial >= 10000)
 	{
 		rpm = (pulses * 60.0 * 0.5);
 		Serial.print(millis() / 100);
@@ -315,18 +324,18 @@ void loop()
 
 		if (comval == 1)
 		{
-			while (true)
+			Commando *pl = &MessageQueue[0], *ph = &MessageQueue[1];
+			for (int i = 0; i < sizeof(MessageQueue) / sizeof(MessageQueue[0]); i++)
 			{
-
+				*pl++ = *ph++;
 			}
 
-			Serial.println("Done");
 			EndOfMessageQueue--;
 			Commando com;
 			com.Command = NO_VALID_MESSAGE;
-			com.T1 = -1;
-			com.T2 = -1;
-			com.T3 = -1;
+			com.T1 = -1.0;
+			com.T2 = -1.0;
+			com.T3 = -1.0;
 			*EndOfMessageQueue = com;
 
 		}

@@ -475,19 +475,27 @@ uint8_t runCommand(Commando com, PressurePump *pump, Spindel *spindel, Marvin_St
 			{
 				/*Der Toolpath wurde noch nicht erreicht*/
 				running = false;
+				Serial.println("Reached");
+				return 1;
+			}
+			else
+			{
 				return 0;
 			}
-			Serial.println("Reached");
-			return 1;
 		}
-		/*Start Breshenham (Timer 3)*/
-		Strecke s;
-		s.x = com.T1;
-		s.y = com.T2;
-		s.f = com.T3;
-		stepper_motors->bresenham(s, steps_per_millimeter);
-		running_flag = true;
-		return 0;
+		else
+		{
+			/*Start Breshenham (Timer 3)*/
+			Strecke s;
+			s.x = com.T1;
+			s.y = com.T2;
+			s.f = com.T3;
+			stepper_motors->bresenham(s, steps_per_millimeter);
+			running_flag = true;
+			running = true;
+			return 0;
+
+		}
 	case KPKDKI:
 		/*
 		Setze Anteile für PID Regler in Reihenfolge
