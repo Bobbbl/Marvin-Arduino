@@ -113,7 +113,7 @@ ISR(TIMER3_COMPA_vect)
 	TCNT3 = 0;
 
 	running_flag = true;
-	if (longpin == 5)
+	if (longpin == PWM1)
 	{
 		PORTE ^= (1 << PE3);
 	}
@@ -126,7 +126,7 @@ ISR(TIMER3_COMPA_vect)
 	if (bcounti >= bcount && bcount != 0)
 	{
 		bcounti = 0;
-		if (shortpin == 5)
+		if (shortpin == PWM1)
 		{
 			PORTE ^= (1 << PE3);
 		}
@@ -233,14 +233,23 @@ void setup()
 
 void loop()
 {
-	static unsigned long pulses_x_old = 0;
-	if (pulses_x != pulses_x_old)
+
+#if LIMIT_SWITCH1
+	if (!digitalRead(LIM1))
 	{
-		Serial.println(pulses_x);
-		pulses_x_old = pulses_x;
+		stopAll();
 	}
+#endif
+
+#if LIMIT_SWITCH2
+	if (!digitalRead(LIM2))
+	{
+		stopAll();
+	}
+#endif
+
 	/*Read Encoder*/
-	if (millis() - timeold_serial >= 10000)
+	if (millis() - timeold_serial >= 1000)
 	{
 		rpm = (pulses * 60.0 * 0.5);
 		Serial.print(millis() / 100);
