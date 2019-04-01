@@ -365,6 +365,7 @@ void sendACK(commEnum c, Commando com)
 	{
 	case XYF:
 		Serial.print("ACK");
+		Serial.print(" XYF");
 
 		Serial.print(" ");
 		Serial.print(com.T1);
@@ -375,6 +376,7 @@ void sendACK(commEnum c, Commando com)
 		break;
 	case KPKDKI:
 		Serial.print("ACK");
+		Serial.print(" PID");
 
 		Serial.print(" ");
 		Serial.print(com.T1);
