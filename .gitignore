@@ -13,3 +13,6 @@
 *.user
 main/__vm
 main/Debug
+main/.vs
+main/main.sln
+main/Release

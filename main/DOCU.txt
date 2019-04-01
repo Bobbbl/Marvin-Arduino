@@ -1,0 +1,712 @@
+#include "Pin_Defines.h"
+#include "Marvin_Communication.h"
+#include "Marvin_Motor.h"
+#include "Druckpumpe.h"
+#include <PID_v1.h>
+#include <string.h>
+// #define ENCODER_OPTIMIZE_INTERRUPTS
+// #include <Encoder.h>
+
+#define ON 0x01
+#define OFF 0x00
+
+#define DEBUG_WHOLEMESSAGE OFF
+#define DEBUG_XYF OFF
+#define DEBUG_P OFF
+#define DEBUG_S OFF
+#define ENCODER ON
+#define ENCODER_ADVANCED OFF
+#define LIMIT_SWITCH1 OFF
+#define LIMIT_SWITCH2 OFF
+
+extern volatile int shortpin, longpin;
+extern volatile float bcount;
+volatile float bcounti = 0;
+extern uint8_t endschalter_flag_x;
+extern uint8_t endschalter_flag_y;
+extern volatile uint16_t steps_x, steps_y;
+extern volatile unsigned long pulses_x, pulses_y;
+
+bool running_flag, REACHED = false;
+volatile float nextX[100], nextY[100], nextF[100], Xreached, Yreached, Freached;
+volatile uint8_t pnumber = 0;
+volatile long steps_per_millimeter = (long)-1;
+
+uint8_t endschalter_flag_x = 0, endschalter_flag_y = 0;
+
+// Encoder encoder_spindel(RENC_A, RENC_B);
+Marvin_Steppers stepper_motors(PWM1, PWM2, DIR1, DIR2);
+Spindel spindel;
+PressurePump pump;
+
+/*-------------------------------------------------------------------
+=                         ISR                                       =
+--------------------------------------------------------------------*/
+
+ISR(TIMER3_COMPA_vect)
+{
+  TCNT3 = 0;
+
+  running_flag = true;
+  if (longpin == 5)
+  {
+    PORTE ^= (1 << PE3);
+  }
+  else
+  {
+    PORTH ^= (1 << PH3);
+  }
+
+  bcounti++;
+  if (bcounti >= bcount && bcount != 0)
+  {
+    bcounti = 0;
+    if (shortpin == 5)
+    {
+      PORTE ^= (1 << PE3);
+    }
+    else
+    {
+      PORTH ^= (1 << PH3);
+    }
+  }
+
+  pulses_x--;
+  if (pulses_x <= 0)
+  {
+    TCCR3A = 0;
+    TCCR3B = 0;
+    TCNT3 = 0;
+    pulses_x = 0;
+
+     REACHED = true;
+    if (pnumber > 0)
+    {
+      Strecke s;
+      s.x = nextX[0];
+      s.y = nextY[0];
+      s.f = nextF[0];
+      Xreached = s.x;
+      Yreached = s.y;
+      Freached = s.f;
+      pnumber--;
+
+      // Shift all Values
+      float tmp;
+      for (size_t i = 1; i < 100; i++)
+      {
+        tmp = nextX[i];
+        nextX[i - 1] = tmp;
+
+        tmp = nextY[i];
+        nextY[i - 1] = tmp;
+
+        tmp = nextF[i];
+        nextF[i - 1] = tmp;
+      }
+
+      if (s.x < 0)
+      {
+        // stepper_motors.setDirectionMotorX((char *)"rechts");
+        digitalWrite(DIR1, HIGH);
+      }
+      else
+      {
+        // stepper_motors.setDirectionMotorX((char *)"links");
+        digitalWrite(DIR1, LOW);
+      }
+      if (s.y < 0)
+      {
+        // stepper_motors.setDirectionMotorY((char *)"rechts");
+        digitalWrite(DIR2, HIGH);
+      }
+      else
+      {
+        // stepper_motors.setDirectionMotorY((char *)"links");
+        digitalWrite(DIR2, LOW);
+      }
+      // stepper_motors.bresenham(s);
+
+      //-----------------------------------------------------------------------------------
+      Point lastpoint = {.x = 0, .y = 0};
+      Point thispoint;
+
+      Vector v;
+
+      thispoint.x = s.x;
+      thispoint.y = s.y;
+
+      // v.x = thispoint.x - lastpoint.x;
+      // v.y = thispoint.y - lastpoint.y;
+      v.x = s.x;
+      v.y = s.y;
+
+      float stepsx, stepsy;
+      stepsx = abs(v.x * STEPS_PER_MILLIMETER_X);
+      stepsy = abs(v.y * STEPS_PER_MILLIMETER_Y);
+
+      unsigned long longline, shortline;
+
+      if (stepsx >= stepsy)
+      {
+        longline = round(stepsx);
+        shortline = round(stepsy);
+        longpin = PWM1;
+        shortpin = PWM2;
+      }
+      else
+      {
+        longline = round(stepsy);
+        shortline = round(stepsx);
+        longpin = PWM2;
+        shortpin = PWM1;
+      }
+
+      bcount = (int)round(longline / shortline);
+
+      // Länge Vektor
+      float l = sqrt(v.x * v.x + v.y * v.y);
+
+      // Zeit in Sekunden
+      float t = l / s.f * 60.0;
+
+      // Zeit pro Schritt
+      float st = t / longline;
+
+      // Compare Match Count
+      // float count = st * 16000000.00 * this->prescaler;
+      int P[5] = {1, 2, 8, 256, 1024};
+      long j = 0;
+      long P_FRQ = CPU_FREQ; // Processor Frequency
+      long cc = 1;
+      float Feed = s.f;                // 100 mm/min
+      long PPM = steps_per_millimeter; // 200 Pulses per Millimeter
+      unsigned long p = 1;
+      long TIMER_MAX = 65536;
+
+      // Zuerst: berechne die Target Frequency
+      //
+      // Die Target Frequency berechnet sich aus
+      // dem Vorschub mit
+      // mm/min * Pulses_Per_Millimeter / 60
+      float target_frq = ((Feed * PPM) / 60.0) * 2.0;
+
+      // Suche den richtigen Prescaler
+      do
+      {
+        // Hole den naechsten Prescaler
+        if (j == 0)
+          p = 1;
+        else if (j == 1)
+          p = 8;
+        else if (j == 2)
+          p = 64;
+        else if (j == 3)
+          p = 256;
+        else if (j == 4)
+          p = 1024;
+
+        j++;
+
+        // Teste den Prescaler
+        // Wenn der Prescaler einen Count generiert der:
+        // Einen Count unter 65536 erzeugt
+        // Der Count groesser als 0 ist (Gueltige Parameter)
+        //
+        // dann nimm den Prescaler und trage ihn ein
+        cc = P_FRQ / (p * target_frq) - 1;
+        // Serial.print("count.... "); Serial.println(cc);
+        // Serial.print("prescaler.... "); Serial.println(p);
+
+        if (((cc < TIMER_MAX) && (cc > 1)) || (j > 4))
+        {
+          break;
+        }
+      } while (1);
+
+      // Checke Count ob er gültige Werte enthält, wenn nicht
+      // dann füge entsprechend entweder den Maximalwert oder
+      // den Minimalwert ein
+      if (cc <= 0)
+        cc = 1;
+      else if (cc >= TIMER_MAX)
+        cc = TIMER_MAX;
+
+      OCR3A = cc;
+
+      pulses_x = longline;
+      pulses_y = shortline;
+
+      TCCR3B = 0;
+
+      switch (p)
+      {
+      case 1:
+        // Set CS12, CS11 and CS10 bits for 1 prescaler
+        TCCR3B |= (0 << CS32) | (0 << CS31) | (1 << CS30);
+        break;
+
+      case 8:
+        // Set CS12, CS11 and CS10 bits for 8 prescaler
+        TCCR3B |= (0 << CS32) | (1 << CS31) | (0 << CS30);
+        break;
+
+      case 64:
+        // Set CS12, CS11 and CS10 bits for 64 prescaler
+        TCCR3B |= (0 << CS32) | (1 << CS31) | (1 << CS30);
+        break;
+
+      case 256:
+        // TCCR3B |= (1 << CS32); // Prescaler 256
+        TCCR3B |= (1 << CS32) | (0 << CS31) | (0 << CS30);
+        break;
+
+      case 1024:
+        TCCR3B |= ((1 << CS30) | (1 << CS32)); // Prescaler 1024
+        break;
+
+      default:
+        break;
+      }
+      // Start Timer
+      TCCR3A |= (1 << WGM32); // CTC Mode
+                              //-----------------------------------------------------------------------------------
+      running_flag = true;
+    }
+    else
+    {
+      pulses_x = 0;
+      TCCR3B = 0;
+      TCCR3A = 0;
+      running_flag = false;
+      pnumber = 0;
+    }
+  }
+}
+
+/*-------------------------------------------------------------------
+=                         Encoder                                    =
+--------------------------------------------------------------------*/
+volatile int encoder_pin = 2;
+double rpm = 0.0; // !!!
+double rpm_regler = rpm;
+volatile float velocity = 0;
+volatile long pulses = 0;
+volatile unsigned long timeold = 0, timeold2 = 0;
+volatile unsigned int pulsesperturn = 1;
+const int wheel_diameter = 24;
+static volatile unsigned long debounce = 0;
+
+/*-------------------------------------------------------------------
+=                         Regler                                    =
+--------------------------------------------------------------------*/
+double Setpoint, Input = 0, Output;
+double kp = 2, kd = 5, ki = 1;
+/*Signature:
+  
+  PID(&Input, &Output, &Setpoint, Kp, Ki, Kd, Direction)
+  PID(&Input, &Output, &Setpoint, Kp, Ki, Kd, POn, Direction)
+  
+  Input: The variable we're trying to control (double)
+  Output: The variable that will be adjusted by the pid (double)
+  Setpoint: The value we want to Input to maintain (double)
+  Kp, Ki, Kd: Tuning Parameters. these affect how the pid will change the output. (double>=0)
+  Direction: Either DIRECT or REVERSE. determines which direction the output will move when faced with a given error. DIRECT is most common.
+  POn: Either P_ON_E (Default) or P_ON_M. Allows Proportional on Measurement to be specified.
+
+*/
+PID marvinPID(&rpm_regler, &Output, &Setpoint, kp, ki, kd, DIRECT);
+void setAnteil(double kp, double kd, double ki);
+
+void setup()
+{
+  TCCR3A = 0;
+  TCCR3B = 0;
+  TCNT3 = 0;
+  Serial.begin(115200);
+  while (!Serial)
+    pinMode(PWM1, OUTPUT);
+  pinMode(PWM2, OUTPUT);
+  pinMode(PWM3, OUTPUT);
+  pinMode(DIR1, OUTPUT);
+  pinMode(DIR2, OUTPUT);
+  pinMode(DIR3, OUTPUT);
+  pinMode(DIR4, OUTPUT);
+  pinMode(END1, INPUT);
+  pinMode(END2, INPUT);
+  pinMode(RELAY_IN4, OUTPUT);
+  pinMode(LIM1, INPUT);
+  pinMode(LIM2, INPUT);
+  // stepper_motors.stopTimer3();
+  // stepper_motors.stopTimer4();
+  spindel.setRichtung(keine);
+  digitalWrite(RELAY_IN4, LOW);
+  pinMode(IN3, OUTPUT);
+  pinMode(IN4, OUTPUT);
+
+  pulses = 0;
+  rpm = 0;
+  timeold = 0;
+  timeold2 = 0;
+  attachInterrupt(digitalPinToInterrupt(ENCODER_PIN), counter, RISING);
+  pinMode(ENCODER_PIN, INPUT);
+
+  marvinPID.SetMode(AUTOMATIC);
+  marvinPID.SetOutputLimits(0, 255);
+  marvinPID.SetSampleTime(10);
+}
+
+/*-------------------------------------------------------------------
+=                         Others                                    =
+--------------------------------------------------------------------*/
+long positionLeft = -999;
+volatile commEnum c = Wait;
+
+void loop()
+{
+  
+
+  if (steps_per_millimeter == -1)
+  {
+    steps_per_millimeter = STEPS_PER_MILLIMETER;
+  }
+
+  /*-------------------Limit Switches-------------------------------*/
+#if LIMIT_SWITCH1
+  if (!digitalRead(LIM1))
+  {
+    stopAll();
+  }
+#endif
+
+#if LIMIT_SWITCH2
+  if (!digitalRead(LIM2))
+  {
+    stopAll();
+  }
+#endif
+  if (REACHED)
+  {
+    Serial.print("Reached X: ");
+    Serial.print(Xreached);
+    Serial.print(" Y: ");
+    Serial.print(Yreached);
+    Serial.print(" F: ");
+    Serial.println(Freached);
+    REACHED = false;
+    Xreached = -1;
+    Yreached = -1;
+    Freached = -1;
+  }
+
+  /*-------------------Encoder--------------------------------------*/
+#if ENCODER_ADVANCED
+
+  long newpos;
+  newpos = encoder_spindel.read();
+  encoder_spindel.write(0);
+
+  if (millis() - timeold >= 100)
+  {
+    rpm = (60.0 * 1000.0 / pulsesperturn) / (millis() - timeold) * newpos;
+    velocity = rpm * 3.1416 * wheel_diameter * 60.0 / 1000000.0;
+    timeold = millis();
+    Serial.print(millis() / 1000);
+    Serial.print("       ");
+    Serial.print(rpm, DEC);
+    Serial.print("   ");
+    Serial.print(newpos, DEC);
+    Serial.print("     ");
+    Serial.println(velocity, 2);
+    encoder_spindel.write(0);
+  }
+#endif
+
+#if ENCODER
+  // Encoder
+
+
+  if(millis() - timeold2 >= 100)
+  {
+    rpm = (pulses * 60.0 * 0.5*10);
+    Serial.print(millis() / 100);
+    Serial.print("       ");
+    Serial.print(rpm, DEC);
+    Serial.print("   ");
+    Serial.print(pulses, DEC);
+    Serial.print("     ");
+    Serial.println(velocity, 2);
+    timeold2 = millis();
+  }
+#endif
+  rpm_regler = rpm;
+  if (millis() - timeold >= 10)
+  {
+    // rpm = (60.0 * 1000.0 / pulsesperturn) / (millis() - timeold) * pulses;
+    rpm = (pulses * 60.0 * 0.5*1000);
+    velocity = rpm * 3.1416 * wheel_diameter * 60.0 / 1000000.0;
+    timeold = millis();
+    
+    pulses = 0;
+  }
+  /*-------------------Regler--------------------------------------*/
+
+  marvinPID.Compute();
+  spindel.startMotorRPM(rechts, Output);
+  
+  // Toolpath Points
+  String m;
+  struct StringArray xm;
+  char *token;
+  int ks, p, z;
+  char arr[10];
+
+  // Wait for new Message
+  while (checkConnection() > 0)
+  {
+    m = Serial.readStringUntil('@');
+
+    c = GetCommunicationEnum(m);
+    m.toCharArray(arr, 20);
+    int count = 0;
+
+    switch (c)
+    {
+    case KPKDKI:
+      token = strtok(arr, ";");
+      count = 0;
+      while (token != NULL && count < 20)
+      {
+        strcpy(xm.str_array[count], token);
+        count++;
+        token = strtok(NULL, ";");
+      }
+      kp = (float)atof(xm.str_array[1]);
+      kd = (float)atof(xm.str_array[2]);
+      ki = (float)atof(xm.str_array[3]);
+      setAnteil(kp, kd, ki);
+      Serial.print("ACK PID ");
+      Serial.print(kp);
+      Serial.print(" ");
+      Serial.print(kd);
+      Serial.print(" ");
+      Serial.println(ki);
+      break;
+    case P:
+      token = strtok(arr, ";");
+      count = 0;
+      while (token != NULL && count < 20)
+      {
+        strcpy(xm.str_array[count], token);
+        count++;
+        token = strtok(NULL, ";");
+      }
+      p = atoi(xm.str_array[1]);
+#if DEBUG_P
+      Serial.println(p);
+#endif
+      pump.startMotor(p);
+      m = "";
+      c = Wait;
+      Serial.print("ACK P ");
+      Serial.println(p);
+      break;
+
+    case CS: // Geregelt Spindelinput
+      token = strtok(arr, ";");
+      count = 0;
+      while (token != NULL && count < 20)
+      {
+        strcpy(xm.str_array[count], token);
+        count++;
+        token = strtok(NULL, ";");
+      }
+      Setpoint = atoi(xm.str_array[1]);
+      marvinPID.SetMode(AUTOMATIC);
+      Serial.print("ACK CS ");
+      Serial.println(Setpoint);
+      break;
+
+    case S:
+      marvinPID.SetMode(MANUAL);
+      token = strtok(arr, ";");
+      count = 0;
+      while (token != NULL && count < 20)
+      {
+        strcpy(xm.str_array[count], token);
+        count++;
+        token = strtok(NULL, ";");
+      }
+      ks = atoi(xm.str_array[1]);
+
+#if DEBUG_S
+      Serial.println(ks);
+#endif
+      spindel.startMotor(rechts, ks);
+      m = "";
+      c = Wait;
+      Serial.print("ACK S ");
+      Serial.println(ks);
+      break;
+
+    case XYF:
+      token = strtok(arr, ";");
+      count = 0;
+      while (token != NULL && count < 20)
+      {
+        strcpy(xm.str_array[count], token);
+        count++;
+        token = strtok(NULL, ";");
+      }
+
+      if (running_flag)
+      {
+        nextX[pnumber] = (float)atof(xm.str_array[1]);
+        nextY[pnumber] = (float)atof(xm.str_array[2]);
+        nextF[pnumber] = (float)atof(xm.str_array[3]);
+        pnumber++;
+#if DEBUG_XYF
+        Serial.println("Point was added to Q");
+        Serial.print("X: ");
+        Serial.print(nextX[pnumber - 1]);
+        Serial.print("Y: ");
+        Serial.print(nextY[pnumber - 1]);
+        Serial.print("F: ");
+        Serial.println(nextF[pnumber - 1]);
+        Serial.print("With \"running_flag\" of: ");
+        Serial.println(running_flag);
+#endif
+      }
+      else
+      {
+        Strecke s;
+        s.x = (float)atof(xm.str_array[1]);
+        s.y = (float)atof(xm.str_array[2]);
+        s.f = (float)atof(xm.str_array[3]);
+        nextX[pnumber] = (float)atof(xm.str_array[1]);
+        nextY[pnumber] = (float)atof(xm.str_array[2]);
+        nextF[pnumber] = (float)atof(xm.str_array[3]);
+        pnumber++;
+        Xreached = s.x;
+        Yreached = s.y;
+        Freached = s.f;
+        REACHED = false;
+
+        stepper_motors.bresenham(s, steps_per_millimeter);
+        running_flag = true;
+#if DEBUG_XYF
+        Serial.println("Motor was started. No points in Q");
+        Serial.print("X: ");
+        Serial.print(s.x);
+        Serial.print("Y: ");
+        Serial.print(s.y);
+        Serial.print("F: ");
+        Serial.println(s.f);
+        Serial.print("With \"running_flag\" of: ");
+        Serial.println(running_flag);
+#endif
+      }
+
+      m = "";
+      c = Wait;
+      Serial.print("ACK XYF ");
+      Serial.print(xm.str_array[1]);
+      Serial.print(" ");
+      Serial.print(xm.str_array[2]);
+      Serial.print(" ");
+      Serial.println(xm.str_array[3]);
+      break;
+
+    case Z:
+      token = strtok(arr, ";");
+      count = 0;
+      while (token != NULL && count < 20)
+      {
+        strcpy(xm.str_array[count], token);
+        count++;
+        token = strtok(NULL, ";");
+      }
+      z = atoi(xm.str_array[1]);
+      if (z == 0)
+      {
+        digitalWrite(RELAY_IN4, HIGH);
+        Serial.println("ACK Z HIGH");
+      }
+      else
+      {
+        digitalWrite(RELAY_IN4, LOW);
+        Serial.println("ACK Z LOW");
+      }
+      break;
+
+    case STOP:
+      stopAll();
+      Serial.println("ACK STOP");
+      break;
+
+    case SPM:
+      token = strtok(arr, ";");
+      count = 0;
+      while (token != NULL && count < 20)
+      {
+        strcpy(xm.str_array[count], token);
+        count++;
+        token = strtok(NULL, ";");
+      }
+      steps_per_millimeter = (long)atoi(xm.str_array[1]);
+      Serial.println("ACK SPM ");
+      Serial.println(steps_per_millimeter);
+      break;
+
+    case NO_VALID_MESSAGE:
+      Serial.println("No Valid Message Sent");
+      c = Wait;
+      m = "";
+      break;
+
+    default:
+      Serial.println("Default Case");
+      c = Wait;
+      m = "";
+      break;
+    }
+  }
+
+  // Switch Case Which Message Was Received
+}
+
+void counter()
+{
+  pulses++;
+}
+
+void stopAll()
+{
+  // Stop Spindel
+  // Stop Steppers
+  // Stop Pump
+  spindel.stopMotor();
+  stepper_motors.stopMotors();
+  pump.stopMotor();
+  // Clear Point Queue
+  for (size_t i = 1; i < 100; i++)
+  {
+    nextX[i] = 0;
+    nextY[i] = 0;
+    nextF[i] = 0;
+  }
+  // Reset Pointer
+  pnumber = 0;
+  // Reset Running Flag
+  running_flag = false;
+  // Reset REACHED Flag
+  REACHED = false;
+}
+
+void setAnteil(double Kp, double Kd, double Ki)
+{
+  kp = Kp;
+  kd = Kd;
+  ki = Ki;
+  marvinPID.SetTunings(kp, kd, ki);
+}

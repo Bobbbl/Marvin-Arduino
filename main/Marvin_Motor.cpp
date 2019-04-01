@@ -345,6 +345,8 @@ void Marvin_Steppers::bresenham(Strecke s)
   pulses_x = longline;
   pulses_y = shortline;
 
+
+
   // Timer starten
   TCCR3A |= (1 << WGM32); // CTC Mode
   DDRE |= (1 << 3);
