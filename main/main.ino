@@ -265,11 +265,11 @@ void loop()
 	in SETUP) to zero. That's why*/
 	rpm_regler = rpm;
 
-	/*Read Encoder a lot fast than once per second. This may be too slow
+	/*Read Encoder a lot faster than once per second. This may be too slow
 	for PID*/
 	if (millis() - timeold >= 10)
 	{
-		rpm = (pulses * 60.0 * 0.5 * 1000);	// * 1000 'cause 10 Milliseconds NOT Seconds
+		rpm = (pulses * 60.0 * 0.5 * 100);	// * 100 'cause 10 Milliseconds NOT Seconds
 		velocity = rpm * 3.1416 * wheel_diameter * 60.0 / 1000000.0;
 		timeold = millis();
 
