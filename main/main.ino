@@ -2,7 +2,6 @@
 #include "Marvin_Communication.h"
 #include "Marvin_Motor.h"
 #include "Druckpumpe.h"
-#include <PID_v1.h>
 #include <string.h>
 // #define ENCODER_OPTIMIZE_INTERRUPTS
 // #include <Encoder.h>
@@ -57,8 +56,7 @@ extern uint8_t endschalter_flag_y;
 =                         Encoder                                    =
 --------------------------------------------------------------------*/
 volatile int encoder_pin = 2;
-double rpm = 0.0; // !!!
-double rpm_regler = rpm;
+double rpm = 0.0;
 volatile float velocity = 0;
 volatile long pulses = 0;
 volatile unsigned long timeold = 0, timeold_serial = 0;
@@ -75,26 +73,13 @@ Marvin_Steppers stepper_motors(PWM1, PWM2, DIR1, DIR2);
 Spindel spindel;
 PressurePump pump;
 
-
 /*-------------------------------------------------------------------
 =                         Regler                                    =
 --------------------------------------------------------------------*/
-double Setpoint, Input = 0, Output;
-double kp = 2, kd = 5, ki = 1;
-/*Signature:
-
-  PID(&Input, &Output, &Setpoint, Kp, Ki, Kd, Direction)
-  PID(&Input, &Output, &Setpoint, Kp, Ki, Kd, POn, Direction)
-
-  Input: The variable we're trying to control (double)
-  Output: The variable that will be adjusted by the pid (double)
-  Setpoint: The value we want to Input to maintain (double)
-  Kp, Ki, Kd: Tuning Parameters. these affect how the pid will change the output. (double>=0)
-  Direction: Either DIRECT or REVERSE. determines which direction the output will move when faced with a given error. DIRECT is most common.
-  POn: Either P_ON_E (Default) or P_ON_M. Allows Proportional on Measurement to be specified.
-
-*/
-PID marvinPID(&rpm_regler, &Output, &Setpoint, kp, ki, kd, DIRECT);
+double Setpoint;
+double rpwm = 0, rpwmmiddle = 0;
+double rpwmarray[10];
+int rpwmcount = 0;
 
 
 /*-------------------------------------------------------------------
@@ -206,15 +191,6 @@ void setup()
 	/*Encoder Interrupt Pin Attach Interrupt on rising edge*/
 	attachInterrupt(digitalPinToInterrupt(ENCODER_PIN), counter, RISING);
 
-	/*
-	AUTOMATIC == ENABLE
-	PID Setup 0 -255 MAX
-	Sample Time 10 ms (Maybe a little bit fast)
-	*/
-	marvinPID.SetMode(AUTOMATIC);
-	marvinPID.SetOutputLimits(0, 255);
-	marvinPID.SetSampleTime(10);
-
 	/*Set Last Message Pointer to first Element of Message Queue
 	'cause it's still empty*/
 	EndOfMessageQueue = &MessageQueue[0];
@@ -248,10 +224,59 @@ void loop()
 	}
 #endif
 
-	/*Read Encoder*/
+
+	/*Read Encoder a lot faster than once per second. This may be too slow
+	for PID*/
+	if (millis() - timeold >= 100)
+	{
+		rpm = (pulses * 60.0 * 0.5 * 10);	// * 100 'cause 10 Milliseconds NOT Seconds
+		velocity = rpm * 3.1416 * wheel_diameter * 60.0 / 1000000.0;
+		timeold = millis();
+
+		pulses = 0;
+
+		rpwmarray[0] = rpm;
+
+		/*Push RPM Array values one place back*/
+		double *pl, *ph;
+		pl = &rpwmarray[0];
+		ph = &rpwmarray[1];
+		for (int i = 0; i < 10; i++)
+		{
+			*pl++ = *ph++;
+		}
+
+		/*Regler Mittelung*/
+		for (int i = 0; i < 10-1; i++)
+		{
+			rpwmmiddle += rpwmmiddle;
+		}
+		rpwmmiddle = rpwmmiddle / 10.0;
+
+		rpwmmiddle = round(rpwmmiddle / 30.0) * 30.0;
+
+		/*Regler*/
+		if (rpwmmiddle < Setpoint)
+		{
+			if (rpwm < 255)
+			{
+				rpwm++;
+			}
+		}
+		else if (rpwmmiddle > Setpoint)
+		{
+			if (rpwm > 0)
+			{
+				rpwm--;
+			}
+		}
+		spindel.startMotorRPM(rechts, rpwm);
+
+	}
+
+	/*Send Encoder*/
 	if (millis() - timeold_serial >= 1000)
 	{
-		rpm = (pulses * 60.0 * 0.5);
 		Serial.print(millis() / 100);
 		Serial.print("       ");
 		Serial.print(rpm, DEC);
@@ -261,24 +286,6 @@ void loop()
 		Serial.println(velocity, 2);
 		timeold_serial = millis();
 	}
-	/*The PID will reset it's input in a period of "Sample Time" (configured
-	in SETUP) to zero. That's why*/
-	rpm_regler = rpm;
-
-	/*Read Encoder a lot faster than once per second. This may be too slow
-	for PID*/
-	if (millis() - timeold >= 10)
-	{
-		rpm = (pulses * 60.0 * 0.5 * 100);	// * 100 'cause 10 Milliseconds NOT Seconds
-		velocity = rpm * 3.1416 * wheel_diameter * 60.0 / 1000000.0;
-		timeold = millis();
-
-		pulses = 0;
-	}
-
-	/*Regler*/
-	marvinPID.Compute();
-	spindel.startMotorRPM(rechts, Output);
 
 	/*Message Queue*/
 	String m;
@@ -329,7 +336,7 @@ void loop()
 	/*Manage Commands*/
 	if (MessageQueue[0].Command != NO_VALID_MESSAGE)
 	{
-		comval = runCommand(MessageQueue[0], &pump, &spindel, &stepper_motors, &marvinPID);
+		comval = runCommand(MessageQueue[0], &pump, &spindel, &stepper_motors);
 
 		if (comval == 1)
 		{

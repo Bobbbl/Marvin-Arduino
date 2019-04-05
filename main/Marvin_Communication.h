@@ -6,7 +6,6 @@
 #include "Pin_Defines.h"
 #include "Marvin_Motor.h"
 #include "Druckpumpe.h"
-#include <PID_v1.h>
 
 #define dict_length 20
 #define MESSAGE_TIMEOUT (unsigned long)5000  // Timeout in ms
@@ -78,7 +77,7 @@ void sendReceiveSuccessfull();
 void sendPointReached();
 void sendACK(commEnum c, Commando com);
 Commando createCommand(commEnum c, StringArray xm);
-uint8_t runCommand(Commando com, PressurePump *pump, Spindel *spindel, Marvin_Steppers *stepper_motors, PID *marvinPID);
+uint8_t runCommand(Commando com, PressurePump *pump, Spindel *spindel, Marvin_Steppers *stepper_motors);
 void setAnteil(double kp, double kd, double ki);
 
 

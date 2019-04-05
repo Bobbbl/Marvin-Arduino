@@ -397,18 +397,17 @@ void sendACK(commEnum c, Commando com)
 	Serial.println();
 }
 
-void setAnteil(double Kp, double Kd, double Ki, PID *marvinPID)
+void setAnteil(double Kp, double Kd, double Ki)
 {
 	/*kp = Kp;
 	kd = Kd;
 	ki = Ki;*/
-	marvinPID->SetTunings(Kp, Kd, Ki);
 }
 
 // Returns  1 for successfull command
 //			0 for waiting for completion
 //			-1 for not successfull completion
-uint8_t runCommand(Commando com, PressurePump *pump, Spindel *spindel, Marvin_Steppers *stepper_motors, PID *marvinPID)
+uint8_t runCommand(Commando com, PressurePump *pump, Spindel *spindel, Marvin_Steppers *stepper_motors)
 {
 	static long timeold = millis();
 	static bool running = false;
@@ -436,7 +435,6 @@ uint8_t runCommand(Commando com, PressurePump *pump, Spindel *spindel, Marvin_St
 			return 0;
 		}
 	case CS:
-		marvinPID->SetMode(AUTOMATIC);
 		Setpoint = com.T1;
 		return 1;
 	case P:
@@ -505,7 +503,6 @@ uint8_t runCommand(Commando com, PressurePump *pump, Spindel *spindel, Marvin_St
 		Differentialanteil
 		Integralanteil
 		*/
-		setAnteil(com.T1, com.T2, com.T3, marvinPID);
 		Serial.println("KPKDKI");
 		return 1;
 	case NO_VALID_MESSAGE:
