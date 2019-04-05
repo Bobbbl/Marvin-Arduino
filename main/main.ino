@@ -23,6 +23,8 @@
 #define LIMIT_SWITCH2		OFF
 #define RPM_MITTELUNG		ON
 #define EASY_REGLER			ON
+#define P_REGLER			OFF
+#define PI_REGLER			OFF
 
 /*-------------------------------------------------------------------
 =                         Message Queue                             =
@@ -84,6 +86,8 @@ double rpwmarray[10];
 int rpwmcount = 0;
 int Max_RPM = 3000, Max_PWM = 150;
 int kp = 1, kd = 1, ki = 1;
+double ta = 0.1;
+int esum = 0;
 
 
 /*-------------------------------------------------------------------
@@ -287,26 +291,47 @@ void loop()
 		// Regelabweichung
 		int e = Setpoint - rpwmmiddle;
 
-		// Output
-		int y =  kp * e;
+		// Reglergleichung
+		int y =  kp*e;
 		
 		// Y Limits
 		if(y>Max_RPM){y = Max_RPM;}
-		if(y<0){y = 0;}
+		if(y<-Max_RPM){y = -Max_RPM;}
 
 		// PWM 
-		int anteil = y / Max_RPM;
-		rpwm = Max_PWM * anteil;
+		double anteil = (double)y / Max_RPM;
+		rpwm += Max_PWM * anteil;
+
+#elif PI_REGLER
+		// Regelabweichung
+		int e = Setpoint - rpwmmiddle;
+
+		// Integralanteil
+		esum += e;
+
+		if (esum < -400) {esum = -400;}	        //Begrenzung I-Anteil
+	  	if (esum > 400) {esum = 400;}
+		
+		// Reglergleichung
+		int y =  kp*e + ki*Ta*esum;
+		
+		// Y Limits
+		if(y>Max_RPM){y = Max_RPM;}
+		if(y<-Max_RPM){y = -Max_RPM;}
+
+		// PWM 
+		double anteil = (double)y / Max_RPM;
+		rpwm += Max_PWM * anteil;
 
 #endif	// End Of EASY_REGLER & P_REGLER
 
 		spindel.startMotorRPM(rechts, rpwm);
 
-	}
+	}//	End Of Timer Encoder
 
 
 
-	/*Send Encoder*/
+	/*Send Encoder Data*/
 	if (millis() - timeold_serial >= 1000)
 	{
 		Serial.print(millis() / 100);
