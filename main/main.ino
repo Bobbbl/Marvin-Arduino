@@ -13,14 +13,16 @@
 #define ON 0x01
 #define OFF 0x00
 
-#define DEBUG_WHOLEMESSAGE OFF
-#define DEBUG_XYF OFF
-#define DEBUG_P OFF
-#define DEBUG_S OFF
-#define ENCODER ON
-#define ENCODER_ADVANCED OFF
-#define LIMIT_SWITCH1 OFF
-#define LIMIT_SWITCH2 OFF
+#define DEBUG_WHOLEMESSAGE	OFF
+#define DEBUG_XYF			OFF
+#define DEBUG_P				OFF
+#define DEBUG_S				OFF
+#define ENCODER				ON
+#define ENCODER_ADVANCED	OFF
+#define LIMIT_SWITCH1		OFF
+#define LIMIT_SWITCH2		OFF
+#define RPM_MITTELUNG		ON
+#define EASY_REGLER			ON
 
 /*-------------------------------------------------------------------
 =                         Message Queue                             =
@@ -80,6 +82,8 @@ double Setpoint;
 double rpwm = 0, rpwmmiddle = 0;
 double rpwmarray[10];
 int rpwmcount = 0;
+int Max_RPM = 3000, Max_PWM = 150;
+int kp = 1, kd = 1, ki = 1;
 
 
 /*-------------------------------------------------------------------
@@ -246,12 +250,20 @@ void loop()
 			*pl++ = *ph++;
 		}
 
+#if EASY_REGLER
+
+#if RPM_MITTELUNG
+
 		/*Regler Mittelung*/
 		for (int i = 0; i < 10-1; i++)
 		{
 			rpwmmiddle += rpwmmiddle;
 		}
 		rpwmmiddle = rpwmmiddle / 10.0;
+
+#else
+		rpwmmiddle = rpm;
+#endif	// End of RPM_MITTELUNG
 
 		rpwmmiddle = round(rpwmmiddle / 30.0) * 30.0;
 
@@ -270,9 +282,29 @@ void loop()
 				rpwm--;
 			}
 		}
+
+#elif P_REGLER
+		// Regelabweichung
+		int e = Setpoint - rpwmmiddle;
+
+		// Output
+		int y =  kp * e;
+		
+		// Y Limits
+		if(y>Max_RPM){y = Max_RPM;}
+		if(y<0){y = 0;}
+
+		// PWM 
+		int anteil = y / Max_RPM;
+		rpwm = Max_PWM * anteil;
+
+#endif	// End Of EASY_REGLER & P_REGLER
+
 		spindel.startMotorRPM(rechts, rpwm);
 
 	}
+
+
 
 	/*Send Encoder*/
 	if (millis() - timeold_serial >= 1000)
@@ -286,6 +318,7 @@ void loop()
 		Serial.println(velocity, 2);
 		timeold_serial = millis();
 	}
+
 
 	/*Message Queue*/
 	String m;
