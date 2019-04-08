@@ -269,6 +269,8 @@ void loop()
 		rpwmmiddle = rpm;
 #endif	// End of RPM_MITTELUNG
 
+		// Abstufung
+		Setpoint = round(Setpoint / 30.0) * 30.0;
 		rpwmmiddle = round(rpwmmiddle / 30.0) * 30.0;
 
 		/*Regler*/
