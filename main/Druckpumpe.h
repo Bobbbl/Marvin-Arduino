@@ -3,6 +3,7 @@
 
 #include "Arduino.h"
 #include "Pin_Defines.h"
+#include "Marvin_Motor.h"
 
 class PressurePump
 {
@@ -18,7 +19,7 @@ class PressurePump
             analogWrite(PWM_PressurePump, 0);
         }
     
-    void startMotor(int speed);
+    void startMotor(int speed, Richtung richtung);
     void stopMotor();
 
 };

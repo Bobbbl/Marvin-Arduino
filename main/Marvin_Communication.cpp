@@ -439,7 +439,7 @@ uint8_t runCommand(Commando com, PressurePump *pump, Spindel *spindel, Marvin_St
 		return 1;
 	case P:
 		/*Start Motor mit */
-		pump->startMotor(com.T1);
+		pump->startMotor(com.T1, (Richtung)(int)com.T2);
 		return 1;
 	case Z:
 		if (com.T1 == 0)
