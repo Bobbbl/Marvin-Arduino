@@ -390,7 +390,8 @@ void loop()
 		}
 
 		/*Add it to Message Queue*/
-		*(EndOfMessageQueue++) = com;	// Write to End of Message Queue and increment pointer
+		*(EndOfMessageQueue) = com;	// Write to End of Message Queue and increment pointer
+		EndOfMessageQueue++;
 	}
 
 	/*Manage Commands*/
