@@ -436,10 +436,12 @@ uint8_t runCommand(Commando com, PressurePump *pump, Spindel *spindel, Marvin_St
 		}
 	case CS:
 		Setpoint = com.T1;
+		Serial.println("End CS Command");
 		return 1;
 	case P:
 		/*Start Motor mit */
 		pump->startMotor(com.T1, (Richtung)(int)com.T2);
+		Serial.println("End P Command");
 		return 1;
 	case Z:
 		if (com.T1 == 0)
@@ -450,6 +452,7 @@ uint8_t runCommand(Commando com, PressurePump *pump, Spindel *spindel, Marvin_St
 		{
 			digitalWrite(RELAY_IN4, LOW);
 		}
+		Serial.println("End Z Command");
 		return 1;
 		break;
 	case STOP:
@@ -459,10 +462,12 @@ uint8_t runCommand(Commando com, PressurePump *pump, Spindel *spindel, Marvin_St
 		pump->stopMotor();
 		/*Stop Stepper Motors*/
 		stepper_motors->stopMotors();
+		Serial.println("End STOP Command");
 		return 1;
 	case SPM:
 		/*Set Steps per millimeter (extern variable)*/
 		steps_per_millimeter = com.T1;
+		Serial.println("End SPM Command");
 		return 1;
 	case XYF:
 		/*Wenn Toolpath noch nicht erreicht wurde, dann
@@ -504,6 +509,7 @@ uint8_t runCommand(Commando com, PressurePump *pump, Spindel *spindel, Marvin_St
 		Integralanteil
 		*/
 		Serial.println("KPKDKI");
+		Serial.println("End KPKDKI Command");
 		return 1;
 	case NO_VALID_MESSAGE:
 		/*Keine bekannte Message wurde gesendet - Gib -1 zurück*/

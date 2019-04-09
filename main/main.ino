@@ -401,7 +401,7 @@ void loop()
 		if (comval == 1)
 		{
 			Commando *pl = &MessageQueue[0], *ph = &MessageQueue[1];
-			for (int i = 0; i < sizeof(MessageQueue) / sizeof(MessageQueue[0]); i++)
+			for (int i = 0; i < (sizeof(MessageQueue) / sizeof(MessageQueue[0]))-1; i++)
 			{
 				*pl++ = *ph++;
 			}
