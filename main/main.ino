@@ -339,9 +339,9 @@ void loop()
 		rpm = (pulses * 60.0 * 0.5);
 		Serial.print("RPM");
 		Serial.print(" ");
-		Serial.print(millis() / 100);
-		Serial.print(" ");
-		Serial.println(rpm, DEC);
+		Serial.print(rpm, DEC);
+		Serial.print(" at ");
+		Serial.println(millis() / 100);
 		timeold_serial = millis();
 	}
 
