@@ -336,13 +336,12 @@ void loop()
 	/*Send Encoder Data*/
 	if (millis() - timeold_serial >= 1000)
 	{
+		rpm = (pulses * 60.0 * 0.5);
+		Serial.print("RPM");
+		Serial.print(" ");
 		Serial.print(millis() / 100);
-		Serial.print("       ");
-		Serial.print(rpm, DEC);
-		Serial.print("   ");
-		Serial.print(pulses, DEC);
-		Serial.print("     ");
-		Serial.println(velocity, 2);
+		Serial.print(" ");
+		Serial.println(rpm, DEC);
 		timeold_serial = millis();
 	}
 
